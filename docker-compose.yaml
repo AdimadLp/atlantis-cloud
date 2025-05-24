@@ -1,0 +1,49 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
+    networks:
+      - public_access
+    depends_on:
+      - nginx
+    user: "1000:1000"
+    cap_add:
+      - NET_RAW
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_service
+    restart: unless-stopped
+    networks:
+      - public_access
+      - app_network
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_service
+    restart: unless-stopped
+    networks:
+      - internal_db_net
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+
+  db_service:
+    image: db_service
+    restart: unless-stopped
+    networks:
+      - internal_db_net
+      - app_network
+    depends_on:
+      - postgres
+
+networks:
+  public_access:
+    driver: bridge
+  internal_db_net: 
+    driver: bridge
+  app_network:
+    driver: bridge

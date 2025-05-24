@@ -1,0 +1,129 @@
+services:
+  #--------------------------------------------------------------------------
+  # Cloudflare Tunnel Service
+  #--------------------------------------------------------------------------
+  cloudflared:
+    image: cloudflare/cloudflared:${CLOUDFLARED_VERSION}
+    container_name: cloudflared_tunnel
+    restart: unless-stopped
+    # The command tells cloudflared to use the config file located at /etc/cloudflared/config.yml
+    # and to run the tunnel using the provided token.
+    # Ensure CLOUDFLARE_TUNNEL_TOKEN is set in your .env file.
+    command: tunnel --config /etc/cloudflared/config.yml run ${CLOUDFLARE_TUNNEL_TOKEN}
+    volumes:
+      # Mount a local directory (e.g., ./cloudflared) into the container.
+      # This directory MUST contain your 'config.yml' and your tunnel's JSON credentials file.
+      - ./cloudflared:/etc/cloudflared
+    networks:
+      - iot_network      # Connect to IOT network to reach api and dashboard
+      - notes_network    # Connect to Notes network to reach affine
+      - drive_network    # Connect to Drive network to reach nextcloud
+    depends_on:
+      # Ensures these services are started before cloudflared tries to connect to them.
+      # For robust startup, consider implementing healthchecks in your services.
+      - iot_api
+      - iot_dashboard
+      - affine
+      - nextcloud
+
+  #--------------------------------------------------------------------------
+  # IOT Network Services
+  #--------------------------------------------------------------------------
+  iot_api:
+    image: ${IOT_API_IMAGE_NAME}:${IOT_API_IMAGE_TAG}
+    container_name: iot_api_service
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    volumes:
+      # Add any volumes your API might need, e.g., for uploads or logs
+      # - ./api_data:/app/data
+    networks:
+      - iot_network
+    depends_on:
+      - iot_db
+
+  iot_db:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: iot_database
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - iot_network
+
+  iot_dashboard:
+    image: ${DASHBOARD_IMAGE_NAME}:${DASHBOARD_IMAGE_TAG}
+    container_name: iot_dashboard
+    restart: unless-stopped
+    environment:
+      - API_BASE_URL=http://api:8000
+    networks:
+      - iot_network
+    depends_on:
+      - api
+
+  #--------------------------------------------------------------------------
+  # Notes Network Service
+  #--------------------------------------------------------------------------
+  affine:
+    image: ghcr.io/toeverything/affine-community:${AFFINE_IMAGE_TAG}
+    container_name: affine
+    restart: unless-stopped
+    volumes:
+      - affine_data:/app/data
+    networks:
+      - notes_network
+
+  #--------------------------------------------------------------------------
+  # Drive Network Service
+  #--------------------------------------------------------------------------
+  nextcloud:
+    image: nextcloud:${NEXTCLOUD_IMAGE_TAG}
+    container_name: nextcloud_drive
+    restart: unless-stopped
+    volumes:
+      - nextcloud_html:/var/www/html
+      - nextcloud_data:/var/www/html/data
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_apps:/var/www/html/custom_apps
+    # environment: # Nextcloud can use SQLite by default or be configured for an external DB
+      # - MYSQL_HOST=...
+      # - MYSQL_DATABASE=...
+      # - MYSQL_USER=...
+      # - MYSQL_PASSWORD=...
+      # - POSTGRES_HOST=db # If you want to use the 'db' service for Nextcloud too
+      # - POSTGRES_DB=nextcloud_db
+      # - POSTGRES_USER=user
+      # - POSTGRES_PASSWORD=password
+    networks:
+      - drive_network
+
+#--------------------------------------------------------------------------
+# Volumes - for persistent data
+#--------------------------------------------------------------------------
+volumes:
+  db_data:
+  affine_data:
+  nextcloud_html:
+  nextcloud_data:
+  nextcloud_config:
+  nextcloud_apps:
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation and communication
+#--------------------------------------------------------------------------
+networks:
+  iot_network:
+    driver: bridge
+    name: iot_network
+  notes_network:
+    driver: bridge
+    name: notes_network
+  drive_network:
+    driver: bridge
+    name: drive_network

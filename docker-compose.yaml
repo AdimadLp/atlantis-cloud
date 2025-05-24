@@ -24,9 +24,10 @@ services:
   iot_api:
     image: ${IOT_API_IMAGE_NAME}:${IOT_API_IMAGE_TAG}
     container_name: iot_api_service
+    # Internal port 8000 (target for cloudflared: iot.atlantis-cloud.com/api)
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@iot_db:5432/${POSTGRES_DB}
     volumes:
       # Add any volumes your API might need, e.g., for uploads or logs
       # - ./api_data:/app/data
@@ -51,9 +52,10 @@ services:
   iot_dashboard:
     image: ${DASHBOARD_IMAGE_NAME}:${DASHBOARD_IMAGE_TAG}
     container_name: iot_dashboard
+    # Internal port 3001 (target for cloudflared: iot.atlantis-cloud.com/dashboard)
     restart: unless-stopped
     environment:
-      - API_BASE_URL=http://api:8000
+      - API_BASE_URL=/api
     networks:
       - iot_network
     depends_on:
@@ -65,6 +67,7 @@ services:
   affine:
     image: ghcr.io/toeverything/affine-community:${AFFINE_IMAGE_TAG}
     container_name: affine
+    # Internal port 3000 (target for cloudflared: notes.atlantis-cloud.com)
     restart: unless-stopped
     volumes:
       - affine_data:/app/data
@@ -77,6 +80,7 @@ services:
   nextcloud:
     image: nextcloud:${NEXTCLOUD_IMAGE_TAG}
     container_name: nextcloud_drive
+    # Internal port 80 (target for cloudflared: drive.atlantis-cloud.com)
     restart: unless-stopped
     environment:
       - MYSQL_HOST=nextcloud_db

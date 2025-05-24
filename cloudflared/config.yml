@@ -2,17 +2,16 @@
 # It should be placed in ./cloudflared/config.yml relative to your docker-compose/template file.
 
 # Ingress rules define how traffic is routed from public hostnames to your internal services.
-# Replace 'yourdomain.com' with your actual domain.
 ingress:
   # Rules for services under iot.atlantis-cloud.com
   # API
   - hostname: iot.atlantis-cloud.com
     path: /api(/.*)?
-    service: http://api:8000
+    service: http://iot_api:8000
   # Dashboard
   - hostname: iot.atlantis-cloud.com
     path: /dashboard(/.*)?
-    service: http://dashboard:3001
+    service: http://iot_dashboard:3001
   
   # Rule for your Affine (Notes) service
   # Assumes 'affine' service listens on port 3000 internally

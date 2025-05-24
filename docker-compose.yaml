@@ -1,39 +1,135 @@
 services:
+  #--------------------------------------------------------------------------
+  # Cloudflare Tunnel Service
+  #--------------------------------------------------------------------------
   cloudflared:
-    image: cloudflare/${CLOUDFLARED_VERSION}
-    container_name: cloudflared
+    image: cloudflare/cloudflared:${CLOUDFLARED_VERSION}
+    container_name: cloudflared_tunnel
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
-    user: "1000:1000"
+    command: tunnel --config /etc/cloudflared/config.yml run ${CLOUDFLARE_TUNNEL_TOKEN}
+    volumes:
+      # Mount a local directory (e.g., ./cloudflared) into the container.
+      # This directory MUST contain your 'config.yml' and your tunnel's JSON credentials file.
+      - ./cloudflared:/etc/cloudflared
     networks:
-      - iot_net
-    cap_add:
-      - NET_RAW
+      - iot_network
+      - notes_network
+      - drive_network
+    # Cloudflared will attempt to connect to backend services as defined in its config.yml.
+    # For robust operation, ensure backend services are resilient and consider implementing healthchecks in them.
 
-  iot_postgres:
-    image: postgres:${IOT_POSTGRES_VERSION}
-    container_name: iot_postgres_service
-    restart: unless-stopped
-    networks:
-      - iot_db_net
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: database
-
+  #--------------------------------------------------------------------------
+  # IOT Network Services
+  #--------------------------------------------------------------------------
   iot_api:
-    image: api_service:latest
+    image: ${IOT_API_IMAGE_NAME}:${IOT_API_IMAGE_TAG}
+    container_name: iot_api_service
     restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    volumes:
+      # Add any volumes your API might need, e.g., for uploads or logs
+      # - ./api_data:/app/data
     networks:
-      - iot_net
-      - iot_db_net
+      - iot_network
     depends_on:
-      - postgres
+      - iot_db
 
+  iot_db:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: iot_database
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - iot_db_data:/var/lib/postgresql/data
+    networks:
+      - iot_network
+
+  iot_dashboard:
+    image: ${DASHBOARD_IMAGE_NAME}:${DASHBOARD_IMAGE_TAG}
+    container_name: iot_dashboard
+    restart: unless-stopped
+    environment:
+      - API_BASE_URL=http://api:8000
+    networks:
+      - iot_network
+    depends_on:
+      - iot_api
+
+  #--------------------------------------------------------------------------
+  # Notes Network Service
+  #--------------------------------------------------------------------------
+  affine:
+    image: ghcr.io/toeverything/affine-community:${AFFINE_IMAGE_TAG}
+    container_name: affine
+    restart: unless-stopped
+    volumes:
+      - affine_data:/app/data
+    networks:
+      - notes_network
+
+  #--------------------------------------------------------------------------
+  # Drive Network Service
+  #--------------------------------------------------------------------------
+  nextcloud:
+    image: nextcloud:${NEXTCLOUD_IMAGE_TAG}
+    container_name: nextcloud_drive
+    restart: unless-stopped
+    environment:
+      - MYSQL_HOST=nextcloud_db
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+    volumes:
+      - nextcloud_html:/var/www/html
+      - nextcloud_data:/var/www/html/data
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_apps:/var/www/html/custom_apps
+    networks:
+      - drive_network
+    depends_on:
+      - nextcloud_db
+
+  nextcloud_db:
+    image: mariadb:${MARIADB_VERSION}
+    container_name: nextcloud_mariadb
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+    volumes:
+      - nextcloud_db_data:/var/lib/mysql
+    networks:
+      - drive_network
+
+#--------------------------------------------------------------------------
+# Volumes - for persistent data
+#--------------------------------------------------------------------------
+volumes:
+  iot_db_data:
+  affine_data:
+  nextcloud_html:
+  nextcloud_data:
+  nextcloud_config:
+  nextcloud_apps:
+  nextcloud_db_data:
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation and communication
+#--------------------------------------------------------------------------
 networks:
-  public_access:
+  iot_network:
     driver: bridge
-  iot_net:
+    name: iot_network
+  notes_network:
     driver: bridge
-  iot_db_net: 
+    name: notes_network
+  drive_network:
     driver: bridge
+    name: drive_network

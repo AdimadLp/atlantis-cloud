@@ -10,8 +10,8 @@ services:
       - COUCHDB_USER=${COUCHDB_USER}
       - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
     volumes:
-      - ./data:/opt/couchdb/data
-      - ./config:/opt/couchdb/etc/local.d
+      - ${COUCHDB_DATA_PATH}:/opt/couchdb/data
+      - ${COUCHDB_CONFIG_PATH}:/opt/couchdb/etc/local.d
     ports:
       - "5984:5984"
     restart: unless-stopped

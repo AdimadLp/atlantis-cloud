@@ -5,23 +5,17 @@ services:
     image: cloudflare/cloudflared:${CLOUDFLARED_VERSION:-latest}
     container_name: cloudflared_tunnel
     restart: unless-stopped
-    command: tunnel --config /etc/cloudflared/config.yml run
+    command: tunnel --config /etc/cloudflared/config.yml run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     volumes:
       - ./cloudflared:/etc/cloudflared
     networks:
-      - iot_network
-      - notes_network
+      #- iot_network
+      #- notes_network
       - drive_network
       - obsidian_network
-    environment:
-      - CLOUDFLARE_TUNNEL_ID=${CLOUDFLARE_TUNNEL_ID}
     # Healthcheck to ensure tunnel is working
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "cloudflared tunnel info ${CLOUDFLARE_TUNNEL_ID} || exit 1",
-        ]
+      test: ["CMD-SHELL", "cloudflared tunnel info || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -29,12 +23,12 @@ services:
 
 # External networks that are created by other compose files
 networks:
-  iot_network:
-    external: true
-    name: iot_network
-  notes_network:
-    external: true
-    name: notes_network
+  #iot_network:
+  #  external: true
+  #  name: iot_network
+  #notes_network:
+  #  external: true
+  #  name: notes_network
   drive_network:
     external: true
     name: drive_network

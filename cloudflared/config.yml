@@ -1,10 +1,6 @@
 # Cloudflare Tunnel Configuration
 # This configuration defines how traffic is routed from your public domains to internal services
 
-# Tunnel configuration
-tunnel: ${CLOUDFLARE_TUNNEL_ID}
-credentials-file: /etc/cloudflared/${CLOUDFLARE_TUNNEL_ID}.json
-
 # Logging configuration
 loglevel: info
 

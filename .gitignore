@@ -1,5 +1,6 @@
 # Environment files containing sensitive data
 .env
+*.json
 
 # Docker volumes and data
 data/

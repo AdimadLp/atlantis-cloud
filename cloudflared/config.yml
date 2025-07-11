@@ -1,33 +1,68 @@
-# This is the configuration file for the Cloudflare Tunnel.
-# It should be placed in ./cloudflared/config.yml relative to your docker-compose/template file.
+# Cloudflare Tunnel Configuration
+# This configuration defines how traffic is routed from your public domains to internal services
 
-# Ingress rules define how traffic is routed from public hostnames to your internal services.
+# Tunnel configuration
+tunnel: ${CLOUDFLARE_TUNNEL_ID}
+credentials-file: /etc/cloudflared/${CLOUDFLARE_TUNNEL_ID}.json
+
+# Logging configuration
+loglevel: info
+
+# Connection settings
+metrics: 0.0.0.0:2000
+no-autoupdate: true
+
+# Ingress rules define how traffic is routed from public hostnames to your internal services
+# Rules are processed in order - first match wins
+# IMPORTANT: The catch-all rule must be last
 ingress:
-  # Rules for services under iot.atlantis-cloud.com
-  # API
-  #- hostname: iot.atlantis-cloud.com
-  #  path: /api(/.*)?
-  #  service: http://iot_api:8000
-  # Dashboard
-  #- hostname: iot.atlantis-cloud.com
-  #  path: /dashboard(/.*)?
-  #  service: http://iot_dashboard:3001
+  # Rules for IoT services under iot.atlantis-cloud.com
+  # API endpoint
+  - hostname: iot.atlantis-cloud.com
+    path: /api/*
+    service: http://iot_api:8000
+    originRequest:
+      httpHostHeader: iot.atlantis-cloud.com
 
-  # Rule for your Affine (Notes) service
-  # Assumes 'affine' service listens on port 3000 internally
+  # Dashboard endpoint
+  - hostname: iot.atlantis-cloud.com
+    path: /dashboard/*
+    service: http://iot_dashboard:3001
+    originRequest:
+      httpHostHeader: iot.atlantis-cloud.com
+
+  # Default for iot.atlantis-cloud.com (redirect to dashboard)
+  - hostname: iot.atlantis-cloud.com
+    service: http://iot_dashboard:3001
+    originRequest:
+      httpHostHeader: iot.atlantis-cloud.com
+
+  # Rule for Affine (Notes) service
   - hostname: notes.atlantis-cloud.com
     service: http://affine:3000
+    originRequest:
+      httpHostHeader: notes.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
 
-  # Rule for your Nextcloud (Drive) service
-  # Assumes 'nextcloud' service listens on port 80 internally
+  # Rule for Nextcloud (Drive) service
   - hostname: drive.atlantis-cloud.com
     service: http://nextcloud:80
+    originRequest:
+      httpHostHeader: drive.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
 
   # Rule for Obsidian LiveSync CouchDB
-  # Assumes 'obsidian-livesync' service listens on port 5984 internally
   - hostname: obsidian.atlantis-cloud.com
     service: http://obsidian-livesync:5984
+    originRequest:
+      httpHostHeader: obsidian.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      # CouchDB specific settings
+      noTLSVerify: false
 
-  # This is a catch-all rule. If no other hostname matches,
-  # it will return a 404 error. This must be the last rule.
+  # Catch-all rule - returns 404 for unmatched requests
+  # This MUST be the last rule
   - service: http_status:404

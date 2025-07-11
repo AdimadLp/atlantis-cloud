@@ -5,14 +5,14 @@
 ingress:
   # Rules for services under iot.atlantis-cloud.com
   # API
-  - hostname: iot.atlantis-cloud.com
-    path: /api(/.*)?
-    service: http://iot_api:8000
+  #- hostname: iot.atlantis-cloud.com
+  #  path: /api(/.*)?
+  #  service: http://iot_api:8000
   # Dashboard
-  - hostname: iot.atlantis-cloud.com
-    path: /dashboard(/.*)?
-    service: http://iot_dashboard:3001
-  
+  #- hostname: iot.atlantis-cloud.com
+  #  path: /dashboard(/.*)?
+  #  service: http://iot_dashboard:3001
+
   # Rule for your Affine (Notes) service
   # Assumes 'affine' service listens on port 3000 internally
   - hostname: notes.atlantis-cloud.com
@@ -22,6 +22,11 @@ ingress:
   # Assumes 'nextcloud' service listens on port 80 internally
   - hostname: drive.atlantis-cloud.com
     service: http://nextcloud:80
+
+  # Rule for Obsidian LiveSync CouchDB
+  # Assumes 'obsidian-livesync' service listens on port 5984 internally
+  - hostname: obsidian.atlantis-cloud.com
+    service: http://obsidian-livesync:5984
 
   # This is a catch-all rule. If no other hostname matches,
   # it will return a 404 error. This must be the last rule.

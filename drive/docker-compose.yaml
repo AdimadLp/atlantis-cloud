@@ -1,0 +1,82 @@
+# Drive Services - Nextcloud
+# Separate docker-compose file for cloud storage services
+services:
+  #--------------------------------------------------------------------------
+  # Drive Network Service
+  #--------------------------------------------------------------------------
+  nextcloud:
+    image: nextcloud:${NEXTCLOUD_IMAGE_TAG:-latest}
+    container_name: nextcloud_drive
+    # Internal port 80 (target for cloudflared: drive.atlantis-cloud.com)
+    restart: unless-stopped
+    environment:
+      - MYSQL_HOST=nextcloud_db
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+    volumes:
+      - nextcloud_html:/var/www/html
+      - nextcloud_data:/var/www/html/data
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_apps:/var/www/html/custom_apps
+    networks:
+      - drive_network
+    depends_on:
+      - nextcloud_db
+    # Healthcheck for Nextcloud
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/status.php || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  nextcloud_db:
+    image: mariadb:${MARIADB_VERSION:-10.11}
+    container_name: nextcloud_mariadb
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+    volumes:
+      - nextcloud_db_data:/var/lib/mysql
+    networks:
+      - drive_network
+    # Healthcheck for MariaDB
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${NEXTCLOUD_DB_ROOT_PASSWORD}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+#--------------------------------------------------------------------------
+# Volumes - for persistent data
+#--------------------------------------------------------------------------
+volumes:
+  nextcloud_html:
+  nextcloud_data:
+  nextcloud_config:
+  nextcloud_apps:
+  nextcloud_db_data:
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation
+#--------------------------------------------------------------------------
+networks:
+  drive_network:
+    driver: bridge
+    name: drive_network

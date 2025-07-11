@@ -1,23 +1,6 @@
+# IoT Services - Irrigation System
+# Separate docker-compose file for IoT-related services
 services:
-  #--------------------------------------------------------------------------
-  # Cloudflare Tunnel Service
-  #--------------------------------------------------------------------------
-  cloudflared:
-    image: cloudflare/cloudflared:${CLOUDFLARED_VERSION}
-    container_name: cloudflared_tunnel
-    restart: unless-stopped
-    command: tunnel --config /etc/cloudflared/config.yml run ${CLOUDFLARE_TUNNEL_TOKEN}
-    volumes:
-      # Mount a local directory (e.g., ./cloudflared) into the container.
-      # This directory MUST contain your 'config.yml' and your tunnel's JSON credentials file.
-      - ./cloudflared:/etc/cloudflared
-    networks:
-      - iot_network
-      - notes_network
-      - drive_network
-    # Cloudflared will attempt to connect to backend services as defined in its config.yml.
-    # For robust operation, ensure backend services are resilient and consider implementing healthchecks in them.
-
   #--------------------------------------------------------------------------
   # IOT Network Services
   #--------------------------------------------------------------------------
@@ -35,9 +18,16 @@ services:
       - iot_network
     depends_on:
       - iot_db
+    # Healthcheck for API
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   iot_db:
-    image: postgres:${POSTGRES_VERSION}
+    image: postgres:${POSTGRES_VERSION:-15}
     container_name: iot_database
     restart: unless-stopped
     environment:
@@ -48,6 +38,13 @@ services:
       - iot_db_data:/var/lib/postgresql/data
     networks:
       - iot_network
+    # Healthcheck for PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   iot_dashboard:
     image: ${DASHBOARD_IMAGE_NAME}:${DASHBOARD_IMAGE_TAG}
@@ -60,80 +57,24 @@ services:
       - iot_network
     depends_on:
       - iot_api
-
-  #--------------------------------------------------------------------------
-  # Notes Network Service
-  #--------------------------------------------------------------------------
-  affine:
-    image: ghcr.io/toeverything/affine-community:${AFFINE_IMAGE_TAG}
-    container_name: affine
-    # Internal port 3000 (target for cloudflared: notes.atlantis-cloud.com)
-    restart: unless-stopped
-    volumes:
-      - affine_data:/app/data
-    networks:
-      - notes_network
-
-  #--------------------------------------------------------------------------
-  # Drive Network Service
-  #--------------------------------------------------------------------------
-  nextcloud:
-    image: nextcloud:${NEXTCLOUD_IMAGE_TAG}
-    container_name: nextcloud_drive
-    # Internal port 80 (target for cloudflared: drive.atlantis-cloud.com)
-    restart: unless-stopped
-    environment:
-      - MYSQL_HOST=nextcloud_db
-      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
-      - MYSQL_USER=${NEXTCLOUD_DB_USER}
-      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-    volumes:
-      - nextcloud_html:/var/www/html
-      - nextcloud_data:/var/www/html/data
-      - nextcloud_config:/var/www/html/config
-      - nextcloud_apps:/var/www/html/custom_apps
-    networks:
-      - drive_network
-    depends_on:
-      - nextcloud_db
-
-  nextcloud_db:
-    image: mariadb:${MARIADB_VERSION}
-    container_name: nextcloud_mariadb
-    restart: unless-stopped
-    command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed
-    environment:
-      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
-      - MYSQL_USER=${NEXTCLOUD_DB_USER}
-      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-    volumes:
-      - nextcloud_db_data:/var/lib/mysql
-    networks:
-      - drive_network
+    # Healthcheck for Dashboard
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 #--------------------------------------------------------------------------
 # Volumes - for persistent data
 #--------------------------------------------------------------------------
 volumes:
   iot_db_data:
-  affine_data:
-  nextcloud_html:
-  nextcloud_data:
-  nextcloud_config:
-  nextcloud_apps:
-  nextcloud_db_data:
 
 #--------------------------------------------------------------------------
-# Networks - for service isolation and communication
+# Networks - for service isolation
 #--------------------------------------------------------------------------
 networks:
   iot_network:
     driver: bridge
     name: iot_network
-  notes_network:
-    driver: bridge
-    name: notes_network
-  drive_network:
-    driver: bridge
-    name: drive_network

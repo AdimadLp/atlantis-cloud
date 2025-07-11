@@ -1,0 +1,36 @@
+# Notes Services - Affine
+# Separate docker-compose file for note-taking services
+services:
+  #--------------------------------------------------------------------------
+  # Notes Network Service
+  #--------------------------------------------------------------------------
+  affine:
+    image: ghcr.io/toeverything/affine-community:${AFFINE_IMAGE_TAG:-stable}
+    container_name: affine
+    # Internal port 3000 (target for cloudflared: notes.atlantis-cloud.com)
+    restart: unless-stopped
+    volumes:
+      - affine_data:/app/data
+    networks:
+      - notes_network
+    # Healthcheck for Affine
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+#--------------------------------------------------------------------------
+# Volumes - for persistent data
+#--------------------------------------------------------------------------
+volumes:
+  affine_data:
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation
+#--------------------------------------------------------------------------
+networks:
+  notes_network:
+    driver: bridge
+    name: notes_network

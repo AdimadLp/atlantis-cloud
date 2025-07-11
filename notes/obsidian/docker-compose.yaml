@@ -12,6 +12,22 @@ services:
     volumes:
       - ${COUCHDB_DATA_PATH}:/opt/couchdb/data
       - ${COUCHDB_CONFIG_PATH}:/opt/couchdb/etc/local.d
-    ports:
-      - "5984:5984"
+    # Remove port exposure since we'll access via cloudflared
+    # ports:
+    #   - "5984:5984"
     restart: unless-stopped
+    networks:
+      - obsidian_network
+    # Healthcheck for CouchDB
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5984/_up || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# Dedicated network for Obsidian services
+networks:
+  obsidian_network:
+    driver: bridge
+    name: obsidian_network

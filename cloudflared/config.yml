@@ -19,6 +19,9 @@ ingress:
     service: http://iot_api:8000
     originRequest:
       httpHostHeader: iot.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      noTLSVerify: false
 
   # Dashboard endpoint
   - hostname: iot.atlantis-cloud.com
@@ -26,12 +29,18 @@ ingress:
     service: http://iot_dashboard:3001
     originRequest:
       httpHostHeader: iot.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      noTLSVerify: false
 
   # Default for iot.atlantis-cloud.com (redirect to dashboard)
   - hostname: iot.atlantis-cloud.com
     service: http://iot_dashboard:3001
     originRequest:
       httpHostHeader: iot.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      noTLSVerify: false
 
   # Rule for Affine (Notes) service
   - hostname: notes.atlantis-cloud.com
@@ -40,6 +49,7 @@ ingress:
       httpHostHeader: notes.atlantis-cloud.com
       connectTimeout: 30s
       tlsTimeout: 10s
+      noTLSVerify: false
 
   # Rule for Nextcloud (Drive) service
   - hostname: drive.atlantis-cloud.com
@@ -48,6 +58,7 @@ ingress:
       httpHostHeader: drive.atlantis-cloud.com
       connectTimeout: 30s
       tlsTimeout: 10s
+      noTLSVerify: false
 
   # Rule for Obsidian LiveSync CouchDB
   - hostname: obsidian.atlantis-cloud.com
@@ -56,7 +67,6 @@ ingress:
       httpHostHeader: obsidian.atlantis-cloud.com
       connectTimeout: 30s
       tlsTimeout: 10s
-      # CouchDB specific settings
       noTLSVerify: false
 
   # Catch-all rule - returns 404 for unmatched requests

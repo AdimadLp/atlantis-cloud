@@ -44,7 +44,7 @@ ingress:
 
   # Rule for Affine (Notes) service
   - hostname: notes.atlantis-cloud.com
-    service: http://affine:3000
+    service: http://affine:3010
     originRequest:
       httpHostHeader: notes.atlantis-cloud.com
       connectTimeout: 30s

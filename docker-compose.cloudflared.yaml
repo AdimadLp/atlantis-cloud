@@ -10,7 +10,7 @@ services:
       - ./cloudflared:/etc/cloudflared
     networks:
       #- iot_network
-      #- notes_network
+      - notes_network
       - drive_network
       - obsidian_network
     # Healthcheck to ensure tunnel is working
@@ -26,9 +26,9 @@ networks:
   #iot_network:
   #  external: true
   #  name: iot_network
-  #notes_network:
-  #  external: true
-  #  name: notes_network
+  notes_network:
+    external: true
+    name: notes_network
   drive_network:
     external: true
     name: drive_network

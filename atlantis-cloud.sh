@@ -44,7 +44,7 @@ declare -A SERVICES=(
     ["cloudflared"]="$SCRIPT_DIR/docker-compose.cloudflared.yaml"
     ["iot"]="$SCRIPT_DIR/iot/irrigation/docker-compose.yaml"
     ["notes"]="$SCRIPT_DIR/notes/docker-compose.yaml"
-    ["obsidian"]="$SCRIPT_DIR/notes/obsidian/docker-compose.yaml"
+    ["obsidian"]="$SCRIPT_DIR/obsidian/docker-compose.yaml"
     ["drive"]="$SCRIPT_DIR/drive/docker-compose.yaml"
 )
 

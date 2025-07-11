@@ -6,6 +6,7 @@
 data/
 config/
 etc/
+.affine/
 
 # Logs
 *.log

@@ -88,7 +88,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_INITDB_ARGS: "--data-checksums"
-      POSTGRES_HOST_AUTH_METHOD: trust
     networks:
       - notes_network
     healthcheck:

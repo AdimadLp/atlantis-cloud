@@ -20,11 +20,11 @@ services:
         condition: service_completed_successfully
     volumes:
       # custom configurations
-      - ${UPLOAD_LOCATION:-./storage}:/root/.affine/storage
-      - ${CONFIG_LOCATION:-./config}:/root/.affine/config
+      - ${UPLOAD_LOCATION}:/root/.affine/storage
+      - ${CONFIG_LOCATION}:/root/.affine/config
     environment:
       - REDIS_SERVER_HOST=redis
-      - DATABASE_URL=postgresql://${DB_USERNAME:-affine}:${DB_PASSWORD:-affine123}@postgres:5432/${DB_DATABASE:-affine}
+      - DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
       - AFFINE_INDEXER_ENABLED=false
     networks:
       - notes_network
@@ -44,12 +44,12 @@ services:
     container_name: affine_migration
     volumes:
       # custom configurations
-      - ${UPLOAD_LOCATION:-./storage}:/root/.affine/storage
-      - ${CONFIG_LOCATION:-./config}:/root/.affine/config
+      - ${UPLOAD_LOCATION}:/root/.affine/storage
+      - ${CONFIG_LOCATION}:/root/.affine/config
     command: ["sh", "-c", "node ./scripts/self-host-predeploy.js"]
     environment:
       - REDIS_SERVER_HOST=redis
-      - DATABASE_URL=postgresql://${DB_USERNAME:-affine}:${DB_PASSWORD:-affine123}@postgres:5432/${DB_DATABASE:-affine}
+      - DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
       - AFFINE_INDEXER_ENABLED=false
     depends_on:
       postgres:
@@ -82,25 +82,18 @@ services:
     image: pgvector/pgvector:pg16
     container_name: affine_postgres
     volumes:
-      - ${DB_DATA_LOCATION:-./db_data}:/var/lib/postgresql/data
+      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${DB_USERNAME:-affine}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-affine123}
-      POSTGRES_DB: ${DB_DATABASE:-affine}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_INITDB_ARGS: "--data-checksums"
       POSTGRES_HOST_AUTH_METHOD: trust
     networks:
       - notes_network
     healthcheck:
       test:
-        [
-          "CMD",
-          "pg_isready",
-          "-U",
-          "${DB_USERNAME:-affine}",
-          "-d",
-          "${DB_DATABASE:-affine}",
-        ]
+        ["CMD", "pg_isready", "-U", "${DB_USERNAME}", "-d", "${DB_DATABASE}"]
       interval: 10s
       timeout: 5s
       retries: 5

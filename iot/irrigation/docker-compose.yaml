@@ -11,9 +11,9 @@ services:
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@iot_db:5432/${POSTGRES_DB}
-    volumes:
-      # Add any volumes your API might need, e.g., for uploads or logs
-      # - ./api_data:/app/data
+    # volumes:
+    # Add any volumes your API might need, e.g., for uploads or logs
+    # - ./api_data:/app/data
     networks:
       - iot_network
     depends_on:

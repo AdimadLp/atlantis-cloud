@@ -13,6 +13,7 @@ services:
       - notes_network
       - drive_network
       - obsidian_network
+      - signaturepdf_network
     # Healthcheck to ensure tunnel is working
     healthcheck:
       test: ["CMD-SHELL", "cloudflared tunnel info || exit 1"]
@@ -35,3 +36,6 @@ networks:
   obsidian_network:
     external: true
     name: obsidian_network
+  signaturepdf_network:
+    external: true
+    name: signaturepdf_network

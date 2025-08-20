@@ -46,6 +46,7 @@ declare -A SERVICES=(
     ["notes"]="$SCRIPT_DIR/notes/docker-compose.yaml"
     ["obsidian"]="$SCRIPT_DIR/obsidian/docker-compose.yaml"
     ["drive"]="$SCRIPT_DIR/drive/docker-compose.yaml"
+    ["signaturepdf"]="$SCRIPT_DIR/signaturepdf/docker-compose.yaml"
 )
 
 # Function to run docker-compose command for a specific service
@@ -72,6 +73,7 @@ start_all() {
     run_compose "drive" "up -d" 
     run_compose "notes" "up -d"
     run_compose "obsidian" "up -d"
+    run_compose "signaturepdf" "up -d"
     
     # Wait a bit for services to initialize
     print_status "Waiting for services to initialize..."
@@ -86,6 +88,7 @@ start_all() {
     echo "  - Notes: notes.atlantis-cloud.com" 
     echo "  - Obsidian: obsidian.atlantis-cloud.com"
     echo "  - Drive: drive.atlantis-cloud.com"
+    echo "  - SignaturePDF: signature.atlantis-cloud.com"
 }
 
 # Function to stop all services
@@ -96,7 +99,7 @@ stop_all() {
     run_compose "cloudflared" "down"
     
     # Stop other services
-    for service in iot drive notes obsidian; do
+    for service in iot drive notes obsidian signaturepdf; do
         run_compose "$service" "down"
     done
     
@@ -119,7 +122,7 @@ status_all() {
 logs_service() {
     local service=$1
     if [ -z "$service" ]; then
-        print_error "Please specify a service: cloudflared, iot, notes, obsidian, drive"
+        print_error "Please specify a service: cloudflared, iot, notes, obsidian, drive, signaturepdf"
         return 1
     fi
     
@@ -136,7 +139,7 @@ logs_service() {
 restart_service() {
     local service=$1
     if [ -z "$service" ]; then
-        print_error "Please specify a service: cloudflared, iot, notes, obsidian, drive"
+        print_error "Please specify a service: cloudflared, iot, notes, obsidian, drive, signaturepdf"
         return 1
     fi
     

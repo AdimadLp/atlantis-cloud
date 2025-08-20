@@ -1,0 +1,48 @@
+# filepath: /home/adrian/Dokumente/atlantis-cloud/signaturepdf/docker-compose.yaml
+# SignaturePDF Services - PDF Signature Tool
+# Separate docker-compose file for PDF signature services
+services:
+  #--------------------------------------------------------------------------
+  # SignaturePDF Service
+  #--------------------------------------------------------------------------
+  signaturepdf:
+    image: xgaia/signaturepdf:${SIGNATUREPDF_IMAGE_TAG:-latest}
+    container_name: signaturepdf
+    # Expose port 8080 for direct access
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+      - SERVERNAME=signature.atlantis-cloud.com
+
+    command: >
+      sh -c "echo 'ServerName signature.atlantis-cloud.com' >> /etc/apache2/apache2.conf &&
+             a2dissite 000-default &&
+             exec apache2-foreground"
+    # volumes:
+    # Volume for PDF storage
+    # - signaturepdf_data:/data
+    networks:
+      - signaturepdf_network
+    # Healthcheck for SignaturePDF
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+#--------------------------------------------------------------------------
+# Volumes - for persistent data
+#--------------------------------------------------------------------------
+#volumes:
+#  signaturepdf_data:
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation
+#--------------------------------------------------------------------------
+networks:
+  signaturepdf_network:
+    driver: bridge
+    name: signaturepdf_network

@@ -80,6 +80,13 @@ A modular cloud infrastructure setup using Docker Compose with separated service
 - **Domain**: `drive.atlantis-cloud.com`
 - **Isolation**: Secure file storage environment
 
+#### 5. **SignaturePDF Network** (`signaturepdf_network`)
+
+- **File**: `signaturepdf/docker-compose.yaml`
+- **Services**: SignaturePDF web application
+- **Domain**: `signature.atlantis-cloud.com`
+- **Isolation**: Dedicated PDF signature service
+
 ## Benefits of This Architecture
 
 ### ✅ **Security & Isolation**
@@ -152,6 +159,7 @@ Once running, your services will be available at:
 - **Notes (Affine)**: `https://notes.atlantis-cloud.com`
 - **Obsidian LiveSync**: `https://obsidian.atlantis-cloud.com`
 - **Drive (Nextcloud)**: `https://drive.atlantis-cloud.com`
+- **SignaturePDF**: `https://signature.atlantis-cloud.com`
 
 ## Configuration Files
 
@@ -190,6 +198,10 @@ NEXTCLOUD_DB_USER=nextcloud
 NEXTCLOUD_DB_PASSWORD=secure_password
 NEXTCLOUD_DB_ROOT_PASSWORD=secure_root_password
 MARIADB_VERSION=10.11
+
+# SignaturePDF Services
+SIGNATUREPDF_IMAGE_TAG=latest
+TZ=Europe/Berlin
 ```
 
 ## Network Security

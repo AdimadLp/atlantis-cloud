@@ -69,6 +69,15 @@ ingress:
       tlsTimeout: 10s
       noTLSVerify: false
 
+  # Rule for SignaturePDF service
+  - hostname: signature.atlantis-cloud.com
+    service: http://signaturepdf:80
+    originRequest:
+      httpHostHeader: signature.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      noTLSVerify: false
+
   # Catch-all rule - returns 404 for unmatched requests
   # This MUST be the last rule
   - service: http_status:404

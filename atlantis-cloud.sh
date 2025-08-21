@@ -88,7 +88,7 @@ start_all() {
     echo "  - Notes: notes.atlantis-cloud.com" 
     echo "  - Obsidian: obsidian.atlantis-cloud.com"
     echo "  - Drive: drive.atlantis-cloud.com"
-    echo "  - SignaturePDF: signature.atlantis-cloud.com"
+    echo "  - SignaturePDF: pdf.atlantis-cloud.com"
 }
 
 # Function to stop all services

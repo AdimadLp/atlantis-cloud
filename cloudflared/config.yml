@@ -70,10 +70,10 @@ ingress:
       noTLSVerify: false
 
   # Rule for SignaturePDF service
-  - hostname: signature.atlantis-cloud.com
+  - hostname: pdf.atlantis-cloud.com
     service: http://signaturepdf:80
     originRequest:
-      httpHostHeader: signature.atlantis-cloud.com
+      httpHostHeader: pdf.atlantis-cloud.com
       connectTimeout: 30s
       tlsTimeout: 10s
       noTLSVerify: false

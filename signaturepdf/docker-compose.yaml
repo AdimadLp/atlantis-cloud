@@ -14,10 +14,10 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ:-Europe/Berlin}
-      - SERVERNAME=signature.atlantis-cloud.com
+      - SERVERNAME=pdf.atlantis-cloud.com
 
     command: >
-      sh -c "echo 'ServerName signature.atlantis-cloud.com' >> /etc/apache2/apache2.conf &&
+      sh -c "echo 'ServerName pdf.atlantis-cloud.com' >> /etc/apache2/apache2.conf &&
              a2dissite 000-default &&
              exec apache2-foreground"
     # volumes:

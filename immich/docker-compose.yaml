@@ -46,6 +46,8 @@ services:
   immich-redis:
     container_name: immich_redis
     image: redis:6.2-alpine@sha256:84882e87b54734154586e5f8abd4dce69fe7311315e2fc6d67c29614c8de2672
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: redis-cli ping || exit 1
     restart: unless-stopped
@@ -64,6 +66,7 @@ services:
     volumes:
       - ${IMMICH_UPLOAD_LOCATION}:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
+      - server_data:/data
     environment:
       - DB_HOSTNAME=immich-postgres
       - DB_USERNAME=${IMMICH_DB_USERNAME}
@@ -127,6 +130,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+
+#--------------------------------------------------------------------------
+# Volumes - for persistent data
+#--------------------------------------------------------------------------
+volumes:
+  redis_data:
+  server_data:
 
 #--------------------------------------------------------------------------
 # Networks - for service isolation

@@ -22,7 +22,7 @@ services:
              exec apache2-foreground"
     # volumes:
     # Volume for PDF storage
-    # - signaturepdf_data:/data
+    # - data:/data
     networks:
       - signaturepdf_network
     # Healthcheck for SignaturePDF

@@ -14,9 +14,11 @@ services:
       - drive_network
       - obsidian_network
       - signaturepdf_network
+      - immich_network
     # Healthcheck to ensure tunnel is working
     healthcheck:
-      test: ["CMD-SHELL", "cloudflared tunnel info || exit 1"]
+      test:
+        ["CMD", "cloudflared", "tunnel", "--metrics", "0.0.0.0:2000", "ready"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -39,3 +41,6 @@ networks:
   signaturepdf_network:
     external: true
     name: signaturepdf_network
+  immich_network:
+    external: true
+    name: immich_network

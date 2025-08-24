@@ -1,0 +1,137 @@
+# filepath: /home/adrian/Dokumente/atlantis-cloud/immich/docker-compose.yaml
+# Immich Services - Self-hosted photo and video management
+# Separate docker-compose file for Immich services
+services:
+  #--------------------------------------------------------------------------
+  # Immich Database (PostgreSQL)
+  #--------------------------------------------------------------------------
+  immich-postgres:
+    container_name: immich_postgres
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:90724186f0a3517cf6914295b5ab410db9ce23190a2d9d0b9dd6463e3fa298f0
+    environment:
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_USER: ${IMMICH_DB_USERNAME}
+      POSTGRES_DB: ${IMMICH_DB_DATABASE_NAME}
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      - ${IMMICH_DB_DATA_PATH}:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready --dbname='${IMMICH_DB_DATABASE_NAME}' --username='${IMMICH_DB_USERNAME}' || exit 1; Chksum="$$(psql --dbname='${IMMICH_DB_DATABASE_NAME}' --username='${IMMICH_DB_USERNAME}' --tuples-only --no-align --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')"; echo "checksum failure count is $$Chksum"; [ "$$Chksum" = '0' ] || exit 1
+      interval: 5m
+      start_interval: 30s
+      start_period: 5m
+    command:
+      [
+        "postgres",
+        "-c",
+        "shared_preload_libraries=vectors.so",
+        "-c",
+        'search_path="$$user", public, vectors',
+        "-c",
+        "logging_collector=on",
+        "-c",
+        "max_wal_size=2GB",
+        "-c",
+        "shared_buffers=512MB",
+        "-c",
+        "wal_compression=on",
+      ]
+    restart: unless-stopped
+    networks:
+      - immich_network
+
+  #--------------------------------------------------------------------------
+  # Immich Redis Cache
+  #--------------------------------------------------------------------------
+  immich-redis:
+    container_name: immich_redis
+    image: redis:6.2-alpine@sha256:84882e87b54734154586e5f8abd4dce69fe7311315e2fc6d67c29614c8de2672
+    healthcheck:
+      test: redis-cli ping || exit 1
+    restart: unless-stopped
+    networks:
+      - immich_network
+
+  #--------------------------------------------------------------------------
+  # Immich Server
+  #--------------------------------------------------------------------------
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    # Expose port 2283 for direct access (optional - accessed via cloudflared)
+    ports:
+      - "2283:3001"
+    volumes:
+      - ${IMMICH_UPLOAD_LOCATION}:/usr/src/app/upload
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - DB_HOSTNAME=immich-postgres
+      - DB_USERNAME=${IMMICH_DB_USERNAME}
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_DATABASE_NAME=${IMMICH_DB_DATABASE_NAME}
+      - REDIS_HOSTNAME=immich-redis
+      - LOG_LEVEL=${IMMICH_LOG_LEVEL:-log}
+      - JWT_SECRET=${IMMICH_JWT_SECRET}
+      - TZ=${TZ:-Europe/Berlin}
+      - IMMICH_PORT=3001
+      - IMMICH_HOST=0.0.0.0
+    depends_on:
+      - immich-redis
+      - immich-postgres
+    restart: unless-stopped
+    networks:
+      - immich_network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:3001/api/server/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  #--------------------------------------------------------------------------
+  # Immich Machine Learning
+  #--------------------------------------------------------------------------
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    # For hardware acceleration, add one of the following (optional):
+    # For Intel Quick Sync Video:
+    # - hwaccel - Intel QSV
+    # devices:
+    #   - /dev/dri:/dev/dri
+    # For NVIDIA GPU acceleration:
+    # - hwaccel - NVIDIA GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    volumes:
+      - ${IMMICH_MODEL_CACHE_PATH}:/cache
+    environment:
+      - LOG_LEVEL=${IMMICH_LOG_LEVEL:-log}
+      - TZ=${TZ:-Europe/Berlin}
+    restart: unless-stopped
+    networks:
+      - immich_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:3003/ping'')"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation
+#--------------------------------------------------------------------------
+networks:
+  immich_network:
+    driver: bridge
+    name: immich_network

@@ -7,6 +7,9 @@ data/
 config/
 etc/
 .affine/
+immich/model-cache/
+immich/photos/
+immich/postgres/
 
 # Logs
 *.log

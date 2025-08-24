@@ -78,6 +78,15 @@ ingress:
       tlsTimeout: 10s
       noTLSVerify: false
 
+  # Rule for Immich (Photos) service
+  - hostname: photos.atlantis-cloud.com
+    service: http://immich-server:3001
+    originRequest:
+      httpHostHeader: photos.atlantis-cloud.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      noTLSVerify: false
+
   # Catch-all rule - returns 404 for unmatched requests
   # This MUST be the last rule
   - service: http_status:404

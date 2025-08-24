@@ -14,45 +14,45 @@ Self-hosted cloud setup using Docker Compose and Cloudflare Tunnel.
 ## Architecture Overview
 
 ```
-┌─────────────────┐    ┌──────────────────────────────────────┐
-│   Cloudflare    │    │            Docker Host               │
-│     Tunnel      │    │                                      │
-│                 │    │  ┌─────────────────────────────────┐ │
-│ iot.atlantis-   ├────┼──┤         Cloudflared             │ │
-│ cloud.com       │    │  │    (Single Instance)            │ │
-│                 │    │  └─────────────────────────────────┘ │
-│ notes.atlantis- │    │              │                       │
-│ cloud.com       │    │              │                       │
-│                 │    │  ┌───────────┴───────────────────┐   │
-│ obsidian.       │    │  │        Network Bridge         │   │
-│ atlantis-       │    │  └───┬───────────────────────────┘   │
-│ cloud.com       │    │      │                               │
-│                 │    │  ┌───┴───────────────────────────┐   │
-│ drive.atlantis- │    │  │     Separated Networks        │   │
-│ cloud.com       │    │  │                               │   │
-│                 │    │  │ iot_network    notes_network  │   │
-│ photos.atlantis-│    │  │     │              │          │   │
-│ cloud.com       │    │  │ ┌───▼────┐    ┌───▼────┐      │   │
-│                 │    │  │ │IoT API │    │Affine  │      │   │
-│ pdf.atlantis-   │    │  │ │+ PostDB│    │Notes   │      │   │
-│ cloud.com       │    │  │ └────────┘    └────────┘      │   │
-└─────────────────┘    │  │                               │   │
-                       │  │ obsidian_network drive_network│   │
-                       │  │     │              │          │   │
-                       │  │ ┌───▼────┐    ┌───▼────┐      │   │
-                       │  │ │CouchDB │    │Nextcloud│     │   │
-                       │  │ │LiveSync│    │+ MariaDB│     │   │
-                       │  │ └────────┘    └────────┘      │   │
-                       │  │                               │   │
-                       │  │ immich_network  pdf_network   │   │
-                       │  │     │              │          │   │
-                       │  │ ┌───▼────┐    ┌───▼────┐      │   │
-                       │  │ │Immich  │    │Signature│     │   │
-                       │  │ │+ PostDB│    │PDF      │     │   │
-                       │  │ │+ Redis │    └────────┘      │   │
-                       │  │ └────────┘                    │   │
-                       │  └───────────────────────────────┘   │
-                       └──────────────────────────────────────┘
+┌─────────────────┐    ┌─────────────────────────────────────────┐
+│   Cloudflare    │    │            Docker Host                  │
+│     Tunnel      │    │                                         │
+│                 │    │  ┌───────────────────────────────────┐  │
+│ iot.atlantis-   ├────┼──┤         Cloudflared               │  │
+│ cloud.com       │    │  │    (Single Instance)              │  │
+│                 │    │  └───────────────────────────────────┘  │
+│ notes.atlantis- │    │              │                          │
+│ cloud.com       │    │              │                          │
+│                 │    │  ┌───────────┴───────────────────────┐  │
+│ obsidian.       │    │  │        Network Bridge             │  │
+│ atlantis-       │    │  └───┬───────────────────────────────┘  │
+│ cloud.com       │    │      │                                  │
+│                 │    │  ┌───┴───────────────────────────────┐  │
+│ drive.atlantis- │    │  │       Separated Networks          │  │
+│ cloud.com       │    │  │                                   │  │
+│                 │    │  │     iot_network   notes_network   │  │
+│ photos.atlantis-│    │  │          │             │          │  │
+│ cloud.com       │    │  │     ┌────▼────┐    ┌───▼────┐     │  │
+│                 │    │  │     │IoT API  │    │Affine  │     │  │
+│ pdf.atlantis-   │    │  │     │+ PostDB │    │Notes   │     │  │
+│ cloud.com       │    │  │     └─────────┘    └────────┘     │  │
+└─────────────────┘    │  │                                   │  │
+                       │  │ obsidian_network   drive_network  │  │
+                       │  │         │                │        │  │
+                       │  │     ┌───▼────┐      ┌────▼────┐   │  │
+                       │  │     │CouchDB │      │Nextcloud│   │  │
+                       │  │     │LiveSync│      │+ MariaDB│   │  │
+                       │  │     └────────┘      └─────────┘   │  │
+                       │  │                                   │  │
+                       │  │    immich_network   pdf_network   │  │
+                       │  │         │               │         │  │
+                       │  │     ┌───▼────┐     ┌────▼────┐    │  │
+                       │  │     │Immich  │     │Signature│    │  │
+                       │  │     │+ PostDB│     │PDF      │    │  │
+                       │  │     │+ Redis │     └─────────┘    │  │
+                       │  │     └────────┘                    │  │
+                       │  └───────────────────────────────────┘  │
+                       └─────────────────────────────────────────┘
 ```
 
 ### Network Architecture

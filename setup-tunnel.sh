@@ -48,8 +48,10 @@ check_requirements() {
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
-        print_error "Docker Compose is not installed. Please install Docker Compose first."
+    # Require docker compose plugin
+    if ! docker compose version >/dev/null 2>&1; then
+        print_error "'docker compose' plugin not found."
+        print_info "Install with: sudo apt install docker-compose-plugin"
         exit 1
     fi
     
@@ -150,8 +152,8 @@ test_tunnel() {
     
     print_info "Starting cloudflared container for testing..."
     
-    # Start only cloudflared for testing
-    if docker-compose -f docker-compose.cloudflared.yaml up -d cloudflared; then
+    # Start only cloudflared for testing using docker compose plugin
+    if docker compose -f docker-compose.cloudflared.yaml up -d cloudflared; then
         print_success "Cloudflared container started"
         
         # Wait for container to be ready
@@ -169,8 +171,8 @@ test_tunnel() {
             print_warning "Tunnel connection may have issues - check logs above"
         fi
         
-        # Stop test container
-        docker-compose -f docker-compose.cloudflared.yaml down
+    # Stop test container
+    docker compose -f docker-compose.cloudflared.yaml down
     else
         print_error "Failed to start cloudflared container"
         return 1
@@ -238,7 +240,7 @@ main() {
     show_dns_setup
     
     print_success "Setup complete!"
-    print_info "You can now start all services with: ./atlantis.sh start"
+    print_info "You can now start all services with: ./atlantis-cloud.sh start"
 }
 
 # Handle script arguments

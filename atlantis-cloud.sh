@@ -6,6 +6,16 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ENV_FILE="$SCRIPT_DIR/.env"
 
+COMPOSE_CMD="docker compose"
+
+ensure_compose_cmd() {
+    if ! docker compose version >/dev/null 2>&1; then
+        echo -e "${RED}[ERROR]${NC} 'docker compose' plugin not found."
+        echo -e "${YELLOW}[WARNING]${NC} Install with: sudo apt install docker-compose-plugin"
+        exit 1
+    fi
+}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -62,7 +72,9 @@ run_compose() {
     fi
     
     print_status "Running '$command' for service '$service'"
-    docker-compose -f "$compose_file" --env-file "$ENV_FILE" $command
+    # Ensure compose plugin is available
+    ensure_compose_cmd
+    $COMPOSE_CMD -f "$compose_file" --env-file "$ENV_FILE" $command
 }
 
 # Function to start services in the correct order

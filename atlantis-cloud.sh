@@ -150,6 +150,61 @@ logs_service() {
     run_compose "$service" "logs -f"
 }
 
+# Function to start a specific service with cloudflared
+start_service() {
+    local service=$1
+    if [ -z "$service" ]; then
+        print_error "Please specify a service: iot, notes, obsidian, drive, signaturepdf, immich"
+        return 1
+    fi
+    
+    if [ "$service" = "cloudflared" ]; then
+        print_error "Use 'start' command to start all services, or specify a specific service to start with cloudflared"
+        return 1
+    fi
+    
+    if [ ! "${SERVICES[$service]}" ]; then
+        print_error "Unknown service: $service"
+        print_warning "Available services (excluding cloudflared): iot, notes, obsidian, drive, signaturepdf, immich"
+        return 1
+    fi
+    
+    print_status "Starting service '$service' with cloudflared..."
+    
+    # Start the specific service first
+    run_compose "$service" "up -d"
+    
+    # Wait a bit for the service to initialize
+    print_status "Waiting for service to initialize..."
+    sleep 5
+    
+    # Start cloudflared to enable access
+    run_compose "cloudflared" "up -d"
+    
+    print_success "Service '$service' and cloudflared started!"
+    print_status "Service will be available at:"
+    case "$service" in
+        "iot")
+            echo "  - IoT: iot.atlantis-cloud.com"
+            ;;
+        "notes")
+            echo "  - Notes: notes.atlantis-cloud.com"
+            ;;
+        "obsidian")
+            echo "  - Obsidian: obsidian.atlantis-cloud.com"
+            ;;
+        "drive")
+            echo "  - Drive: drive.atlantis-cloud.com"
+            ;;
+        "signaturepdf")
+            echo "  - SignaturePDF: pdf.atlantis-cloud.com"
+            ;;
+        "immich")
+            echo "  - Immich Photos: photos.atlantis-cloud.com"
+            ;;
+    esac
+}
+
 # Function to restart a specific service
 restart_service() {
     local service=$1
@@ -175,7 +230,11 @@ check_env_file
 
 case "$1" in
     "start"|"up")
-        start_all
+        if [ -n "$2" ]; then
+            start_service "$2"
+        else
+            start_all
+        fi
         ;;
     "stop"|"down")
         stop_all
@@ -201,18 +260,19 @@ case "$1" in
         echo "Usage: $0 {start|stop|restart|status|logs} [service]"
         echo ""
         echo "Commands:"
-        echo "  start           Start all services"
-        echo "  stop            Stop all services"
-        echo "  restart [svc]   Restart all services or specific service"
-        echo "  status          Show status of all services"
-        echo "  logs <service>  Show logs for specific service"
+        echo "  start [service]    Start all services or specific service with cloudflared"
+        echo "  stop               Stop all services"
+        echo "  restart [svc]      Restart all services or specific service"
+        echo "  status             Show status of all services"
+        echo "  logs <service>     Show logs for specific service"
         echo ""
         echo "Available services: ${!SERVICES[*]}"
         echo ""
         echo "Examples:"
-        echo "  $0 start                 # Start all services"
-        echo "  $0 restart cloudflared   # Restart only cloudflared"
-        echo "  $0 logs iot             # Show IoT service logs"
+        echo "  $0 start                    # Start all services"
+        echo "  $0 start notes              # Start only notes service with cloudflared"
+        echo "  $0 restart cloudflared      # Restart only cloudflared"
+        echo "  $0 logs iot                # Show IoT service logs"
         exit 1
         ;;
 esac

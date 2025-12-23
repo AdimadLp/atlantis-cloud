@@ -7,7 +7,6 @@ services:
   nextcloud:
     image: nextcloud:latest
     container_name: nextcloud_drive
-    # Internal port 80 (target for cloudflared: drive.atlantis-cloud.com)
     restart: unless-stopped
     ports:
       - "8080:80"

@@ -1,143 +1,86 @@
-# filepath: /home/adrian/Dokumente/atlantis-cloud/immich/docker-compose.yaml
-# Immich Services - Self-hosted photo and video management
-# Separate docker-compose file for Immich services
 services:
-  #--------------------------------------------------------------------------
-  # Immich Database (PostgreSQL)
-  #--------------------------------------------------------------------------
-  immich-postgres:
-    container_name: immich_postgres
-    image: tensorchord/pgvecto-rs:pg14-v0.2.0
-    environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-      POSTGRES_USER: immich
-      POSTGRES_DB: immich
-      POSTGRES_INITDB_ARGS: "--data-checksums"
-    secrets:
-      - db_password
-    volumes:
-      - immich_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: pg_isready --dbname='immich' --username='immich' || exit 1; Chksum="$$(psql --dbname='immich' --username='immich' --tuples-only --no-align --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')"; echo "checksum failure count is $$Chksum"; [ "$$Chksum" = '0' ] || exit 1
-      interval: 5m
-      start_interval: 30s
-      start_period: 5m
-    command:
-      [
-        "postgres",
-        "-c",
-        "shared_preload_libraries=vectors.so",
-        "-c",
-        'search_path="$$user", public, vectors',
-        "-c",
-        "logging_collector=on",
-        "-c",
-        "max_wal_size=1GB",
-        "-c",
-        "shared_buffers=256MB",
-        "-c",
-        "wal_compression=on",
-        "-c",
-        "max_connections=50",
-      ]
-    restart: unless-stopped
-    networks:
-      - immich_network
-
-  #--------------------------------------------------------------------------
-  # Immich Redis Cache
-  #--------------------------------------------------------------------------
-  immich-redis:
-    container_name: immich_redis
-    image: redis:6.2-alpine
-    volumes:
-      - immich_redis_data:/data
-    healthcheck:
-      test: redis-cli ping || exit 1
-    restart: unless-stopped
-    networks:
-      - immich_network
-
-  #--------------------------------------------------------------------------
-  # Immich Server
-  #--------------------------------------------------------------------------
   immich-server:
-    container_name: immich_server
     image: ghcr.io/immich-app/immich-server:release
     pull_policy: always
     ports:
-      - "3001:3001"
+      - "2283:2283"
     volumes:
-      - /opt/immich/photos:/usr/src/app/upload
+      - /opt/immich/photos:/data
       - /etc/localtime:/etc/localtime:ro
-      - immich_server_data:/data
     environment:
-      - DB_HOSTNAME=immich-postgres
-      - DB_USERNAME=immich
-      - DB_PASSWORD_FILE=/run/secrets/db_password
-      - DB_DATABASE_NAME=immich
-      - REDIS_HOSTNAME=immich-redis
-      - LOG_LEVEL=log
-      - JWT_SECRET_FILE=/run/secrets/jwt_secret
-      - TZ=Europe/Berlin
-      - IMMICH_PORT=3001
-      - IMMICH_HOST=0.0.0.0
+      DB_HOSTNAME: database
+      DB_USERNAME: immich
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      DB_DATABASE_NAME: immich
+      REDIS_HOSTNAME: redis
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      LOG_LEVEL: log
+      TZ: Europe/Berlin
+      IMMICH_PORT: "2283"
+      IMMICH_HOST: 0.0.0.0
     secrets:
       - db_password
       - jwt_secret
     depends_on:
-      - immich-redis
-      - immich-postgres
+      - redis
+      - database
     restart: unless-stopped
-    networks:
-      - immich_network
     healthcheck:
       test:
-        ["CMD-SHELL", "curl -f http://localhost:3001/api/server/ping || exit 1"]
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:2283/api/server/ping || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
-  #--------------------------------------------------------------------------
-  # Immich Machine Learning
-  #--------------------------------------------------------------------------
   immich-machine-learning:
-    container_name: immich_machine_learning
-    # For hardware acceleration, add one of the following (optional):
-    # For Intel Quick Sync Video:
-    # - hwaccel - Intel QSV
-    # devices:
-    #   - /dev/dri:/dev/dri
-    # For NVIDIA GPU acceleration:
-    # - hwaccel - NVIDIA GPU
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
+    # Example tag: release-cuda
     image: ghcr.io/immich-app/immich-machine-learning:release
     pull_policy: always
     volumes:
       - /opt/immich/model-cache:/cache
     environment:
-      - LOG_LEVEL=log
-      - TZ=Europe/Berlin
+      LOG_LEVEL: log
+      TZ: Europe/Berlin
     restart: unless-stopped
-    networks:
-      - immich_network
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:3003/ping'')"',
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:3003/ping'')" || exit 1',
         ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 120s
+
+  redis:
+    image: docker.io/valkey/valkey:9@sha256:fb8d272e529ea567b9bf1302245796f21a2672b8368ca3fcb938ac334e613c8f
+    volumes:
+      - immich_redis_data:/data
+    healthcheck:
+      test: redis-cli ping || exit 1
+    restart: unless-stopped
+
+  database:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_USER: immich
+      POSTGRES_DB: immich
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
+      # DB_STORAGE_TYPE: 'HDD'
+    secrets:
+      - db_password
+    volumes:
+      - immich_postgres_data:/var/lib/postgresql/data
+    shm_size: 128mb
+    restart: unless-stopped
 
 #--------------------------------------------------------------------------
 # Volumes - for persistent data
@@ -147,8 +90,6 @@ volumes:
     name: immich_postgres_data
   immich_redis_data:
     name: immich_redis_data
-  immich_server_data:
-    name: immich_server_data
 
 #--------------------------------------------------------------------------
 # Secrets - for sensitive data

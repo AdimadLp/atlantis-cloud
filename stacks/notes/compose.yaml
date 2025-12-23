@@ -1,6 +1,5 @@
 # Notes Services - Affine
 # Separate docker-compose file for note-taking services
-name: affine
 services:
   #--------------------------------------------------------------------------
   # Affine Main Service

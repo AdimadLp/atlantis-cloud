@@ -20,9 +20,9 @@ services:
       # Reverse proxy (Caddy on edge) + public domain
       - NEXTCLOUD_TRUSTED_DOMAINS=drive.atlantis-cloud.com
       - TRUSTED_PROXIES=192.168.2.120,192.168.2.145
-      - OVERWRITEHOST=drive.atlantis-cloud.com
-      - OVERWRITEPROTOCOL=https
-      - OVERWRITECLIURL=https://drive.atlantis-cloud.com
+      # - OVERWRITEHOST=drive.atlantis-cloud.com
+      # - OVERWRITEPROTOCOL=https
+      # - OVERWRITECLIURL=https://drive.atlantis-cloud.com
     secrets:
       - db_user
       - db_password

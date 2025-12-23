@@ -26,7 +26,8 @@ services:
     networks:
       - drive_network
     depends_on:
-      - nextcloud_db
+      nextcloud_db:
+        condition: service_healthy
     # Healthcheck for Nextcloud
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost/status.php || exit 1"]

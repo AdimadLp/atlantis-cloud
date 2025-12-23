@@ -14,8 +14,6 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      affine_migration:
-        condition: service_completed_successfully
     volumes:
       # custom configurations
       - /opt/notes/storage:/root/.affine/storage
@@ -26,6 +24,7 @@ services:
       sh -c '
       DB_PASSWORD=$$(cat /run/secrets/db_password)
       export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"
+      node ./scripts/self-host-predeploy.js
       exec node ./dist/main.js
       '
     environment:
@@ -44,36 +43,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-
-  #--------------------------------------------------------------------------
-  # Affine Migration Service
-  #--------------------------------------------------------------------------
-  affine_migration:
-    image: ghcr.io/toeverything/affine:${AFFINE_REVISION:-stable}
-    container_name: affine_migration
-    volumes:
-      # custom configurations
-      - /opt/notes/storage:/root/.affine/storage
-      - /opt/notes/config:/root/.affine/config
-    secrets:
-      - db_password
-    command: |
-      sh -c '
-      DB_PASSWORD=$$(cat /run/secrets/db_password)
-      export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"
-      exec node ./scripts/self-host-predeploy.js
-      '
-    environment:
-      - REDIS_SERVER_HOST=redis
-      - AFFINE_INDEXER_ENABLED=false
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - notes_network
-    restart: "no"
 
   #--------------------------------------------------------------------------
   # Redis Cache Service

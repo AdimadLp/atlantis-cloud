@@ -1,0 +1,29 @@
+# Dockge - Docker Compose Stack Manager
+# Uses the parent stacks directory as the root for stacks
+name: dockge
+services:
+  #--------------------------------------------------------------------------
+  # Dockge Service
+  #--------------------------------------------------------------------------
+  dockge:
+    image: ghcr.io/louislam/dockge:${DOCKGE_IMAGE_TAG:-1}
+    container_name: dockge
+    restart: unless-stopped
+    ports:
+      - "${DOCKGE_PORT:-5001}:5001"
+    environment:
+      - DOCKGE_STACKS_DIR=/opt/stacks
+    volumes:
+      - /opt/dockge:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/atlantis-cloud/stacks:/opt/stacks
+    networks:
+      - dockge_network
+
+#--------------------------------------------------------------------------
+# Networks - for service isolation
+#--------------------------------------------------------------------------
+networks:
+  dockge_network:
+    driver: bridge
+    name: dockge_network

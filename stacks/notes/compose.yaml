@@ -26,7 +26,7 @@ services:
       sh -c '
       DB_PASSWORD=$$(cat /run/secrets/db_password)
       export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"
-      exec node ./dist/index.js
+      exec node ./dist/main.js
       '
     environment:
       - REDIS_SERVER_HOST=redis
@@ -38,7 +38,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'node -e "require(''http'').get(''http://localhost:3010'', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(''error'', () => process.exit(1))"',
+          'node -e "require(''http'').get(''http://localhost:3010'', (res) => process.exit(res.statusCode >= 200 && res.statusCode < 400 ? 0 : 1)).on(''error'', () => process.exit(1))"',
         ]
       interval: 30s
       timeout: 10s

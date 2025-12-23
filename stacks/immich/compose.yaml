@@ -13,16 +13,14 @@ services:
       DB_PASSWORD_FILE: /run/secrets/db_password
       DB_DATABASE_NAME: immich
       REDIS_HOSTNAME: redis
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
-      LOG_LEVEL: log
+      IMMICH_LOG_LEVEL: log
       TZ: Europe/Berlin
     secrets:
       - db_password
-      - jwt_secret
     depends_on:
       - redis
       - database
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test:
         [
@@ -42,9 +40,9 @@ services:
     volumes:
       - /opt/immich/model-cache:/cache
     environment:
-      LOG_LEVEL: log
+      IMMICH_LOG_LEVEL: log
       TZ: Europe/Berlin
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test:
         [
@@ -62,7 +60,7 @@ services:
       - immich_redis_data:/data
     healthcheck:
       test: redis-cli ping || exit 1
-    restart: unless-stopped
+    restart: always
 
   database:
     image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
@@ -78,7 +76,7 @@ services:
     volumes:
       - immich_postgres_data:/var/lib/postgresql/data
     shm_size: 128mb
-    restart: unless-stopped
+    restart: always
 
 #--------------------------------------------------------------------------
 # Volumes - for persistent data
@@ -95,5 +93,3 @@ volumes:
 secrets:
   db_password:
     file: /opt/secrets/immich/db_password
-  jwt_secret:
-    file: /opt/secrets/immich/jwt_secret

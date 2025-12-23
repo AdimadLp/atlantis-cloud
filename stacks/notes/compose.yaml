@@ -31,8 +31,6 @@ services:
     environment:
       - REDIS_SERVER_HOST=redis
       - AFFINE_INDEXER_ENABLED=false
-    networks:
-      - notes_network
     restart: unless-stopped
     healthcheck:
       test:
@@ -54,8 +52,6 @@ services:
     container_name: affine_redis
     volumes:
       - notes_redis_data:/data
-    networks:
-      - notes_network
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -79,8 +75,6 @@ services:
       POSTGRES_INITDB_ARGS: "--data-checksums"
     secrets:
       - db_password
-    networks:
-      - notes_network
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "affine_user", "-d", "affine"]
       interval: 10s
@@ -103,11 +97,3 @@ volumes:
 secrets:
   db_password:
     file: /opt/secrets/notes/db_password
-
-#--------------------------------------------------------------------------
-# Networks - for service isolation
-#--------------------------------------------------------------------------
-networks:
-  notes_network:
-    driver: bridge
-    name: notes_network

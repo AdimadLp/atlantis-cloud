@@ -99,11 +99,3 @@ secrets:
     file: /opt/secrets/immich/db_password
   jwt_secret:
     file: /opt/secrets/immich/jwt_secret
-
-#--------------------------------------------------------------------------
-# Networks - for service isolation
-#--------------------------------------------------------------------------
-networks:
-  immich_network:
-    driver: bridge
-    name: immich_network

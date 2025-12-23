@@ -20,8 +20,6 @@ services:
     # ports:
     #   - "5984:5984"
     restart: unless-stopped
-    networks:
-      - obsidian_network
     # Healthcheck for CouchDB
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5984/_up || exit 1"]
@@ -41,9 +39,3 @@ secrets:
     file: /opt/secrets/obsidian/couchdb_user
   couchdb_password:
     file: /opt/secrets/obsidian/couchdb_password
-
-# Dedicated network for Obsidian services
-networks:
-  obsidian_network:
-    driver: bridge
-    name: obsidian_network

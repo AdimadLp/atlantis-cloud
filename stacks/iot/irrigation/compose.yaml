@@ -27,8 +27,6 @@ services:
     # volumes:
     # Add any volumes your API might need, e.g., for uploads or logs
     # - ./api_data:/app/data
-    networks:
-      - iot_network
     depends_on:
       - iot_db
     # Healthcheck for API
@@ -55,8 +53,6 @@ services:
       - db_name
     volumes:
       - iot_postgres_data:/var/lib/postgresql/data
-    networks:
-      - iot_network
     # Healthcheck for PostgreSQL
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U iot_user -d iot_database"]
@@ -75,8 +71,6 @@ services:
     restart: unless-stopped
     environment:
       - API_BASE_URL=/api
-    networks:
-      - iot_network
     depends_on:
       - iot_api
     # Healthcheck for Dashboard
@@ -104,10 +98,3 @@ secrets:
     file: /opt/secrets/iot/db_password
   db_name:
     file: /opt/secrets/iot/db_name
-#--------------------------------------------------------------------------
-# Networks - for service isolation
-#--------------------------------------------------------------------------
-networks:
-  iot_network:
-    driver: bridge
-    name: iot_network

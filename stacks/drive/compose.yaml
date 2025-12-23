@@ -34,8 +34,6 @@ services:
       - /opt/drive/data:/var/www/html/data
       - /opt/drive/config:/var/www/html/config
       - /opt/drive/apps:/var/www/html/custom_apps
-    networks:
-      - drive_network
     depends_on:
       nextcloud_db:
         condition: service_healthy
@@ -64,8 +62,6 @@ services:
       - db_password
     volumes:
       - drive_mariadb_data:/var/lib/mysql
-    networks:
-      - drive_network
     # Healthcheck for MariaDB
     healthcheck:
       test:
@@ -101,11 +97,3 @@ secrets:
     file: /opt/secrets/drive/nextcloud_admin_user
   nextcloud_admin_password:
     file: /opt/secrets/drive/nextcloud_admin_password
-
-#--------------------------------------------------------------------------
-# Networks - for service isolation
-#--------------------------------------------------------------------------
-networks:
-  drive_network:
-    driver: bridge
-    name: drive_network

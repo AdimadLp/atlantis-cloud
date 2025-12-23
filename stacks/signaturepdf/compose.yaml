@@ -7,6 +7,7 @@ services:
   #--------------------------------------------------------------------------
   signaturepdf:
     image: xgaia/signaturepdf:latest
+    pull_policy: always
     platform: linux/amd64
     container_name: signaturepdf
     # Expose port 8080 for direct access

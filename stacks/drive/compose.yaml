@@ -6,6 +6,7 @@ services:
   #--------------------------------------------------------------------------
   nextcloud:
     image: nextcloud:latest
+    pull_policy: always
     container_name: nextcloud_drive
     restart: unless-stopped
     ports:
@@ -48,6 +49,7 @@ services:
 
   nextcloud_db:
     image: mariadb:10.11
+    pull_policy: always
     container_name: nextcloud_mariadb
     restart: unless-stopped
     command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed

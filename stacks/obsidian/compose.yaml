@@ -2,6 +2,7 @@ services:
   couchdb-obsidian-livesync:
     container_name: obsidian-livesync
     image: couchdb:3.3.3
+    pull_policy: always
     environment:
       - PUID=99
       - PGID=100

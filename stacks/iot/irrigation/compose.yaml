@@ -6,6 +6,7 @@ services:
   #--------------------------------------------------------------------------
   iot_api:
     image: your_iot_api_image:latest
+    pull_policy: always
     container_name: iot_api_service
     ports:
       - "8000:8000"
@@ -40,6 +41,7 @@ services:
 
   iot_db:
     image: postgres:15
+    pull_policy: always
     container_name: iot_database
     restart: unless-stopped
     environment:
@@ -65,6 +67,7 @@ services:
 
   iot_dashboard:
     image: your_dashboard_image:latest
+    pull_policy: always
     container_name: iot_dashboard
     ports:
       - "3002:3001"

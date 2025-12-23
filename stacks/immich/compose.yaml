@@ -64,6 +64,7 @@ services:
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:release
+    pull_policy: always
     ports:
       - "3001:3001"
     volumes:
@@ -118,6 +119,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     image: ghcr.io/immich-app/immich-machine-learning:release
+    pull_policy: always
     volumes:
       - /opt/immich/model-cache:/cache
     environment:

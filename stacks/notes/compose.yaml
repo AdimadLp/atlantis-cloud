@@ -5,7 +5,7 @@ services:
   # Affine Main Service
   #--------------------------------------------------------------------------
   affine:
-    image: ghcr.io/toeverything/affine-graphql:stable
+    image: ghcr.io/toeverything/affine:${AFFINE_REVISION:-stable}
     container_name: affine
     ports:
       - "3010:3010"
@@ -49,7 +49,7 @@ services:
   # Affine Migration Service
   #--------------------------------------------------------------------------
   affine_migration:
-    image: ghcr.io/toeverything/affine-graphql:stable
+    image: ghcr.io/toeverything/affine:${AFFINE_REVISION:-stable}
     container_name: affine_migration
     volumes:
       # custom configurations
@@ -101,12 +101,11 @@ services:
     volumes:
       - notes_postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER_FILE: /run/secrets/db_username
+      POSTGRES_USER: affine_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: affine
       POSTGRES_INITDB_ARGS: "--data-checksums"
     secrets:
-      - db_username
       - db_password
     networks:
       - notes_network
@@ -130,8 +129,6 @@ volumes:
 # Secrets - for sensitive data
 #--------------------------------------------------------------------------
 secrets:
-  db_username:
-    file: /opt/secrets/notes/db_username
   db_password:
     file: /opt/secrets/notes/db_password
 

@@ -16,8 +16,6 @@ services:
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       LOG_LEVEL: log
       TZ: Europe/Berlin
-      IMMICH_PORT: "2283"
-      IMMICH_HOST: 0.0.0.0
     secrets:
       - db_password
       - jwt_secret
@@ -29,7 +27,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -fsS http://localhost:2283/api/server/ping || exit 1",
+          "curl -fsS http://localhost:2283/api/server/ping >/dev/null || exit 1",
         ]
       interval: 30s
       timeout: 10s
@@ -51,7 +49,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:3003/ping'')" || exit 1',
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:3003/ping")'' || exit 1',
         ]
       interval: 30s
       timeout: 10s

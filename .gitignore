@@ -1,6 +1,10 @@
 # Environment files containing sensitive data
 .env
+.env.local
 *.json
+
+# Secrets directory - NEVER commit!
+secrets/
 
 # Docker volumes and data
 data/

@@ -5,12 +5,22 @@ services:
   # IOT Network Services
   #--------------------------------------------------------------------------
   iot_api:
-    image: ${IOT_API_IMAGE_NAME}:${IOT_API_IMAGE_TAG}
+    image: your_iot_api_image:latest
     container_name: iot_api_service
+    ports:
+      - "8000:8000"
     # Internal port 8000 (target for cloudflared: iot.atlantis-cloud.com/api)
     restart: unless-stopped
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@iot_db:5432/${POSTGRES_DB}
+    volumes:
+      - /opt/secrets/iot:/run/secrets:ro
+    command: >
+      sh -c '
+      DB_USER=$$(cat /run/secrets/db_user)
+      DB_PASSWORD=$$(cat /run/secrets/db_password)
+      DB_NAME=$$(cat /run/secrets/db_name)
+      export DATABASE_URL="postgresql://$$DB_USER:$$DB_PASSWORD@iot_db:5432/$$DB_NAME"
+      exec node /app/index.js
+      '
     # volumes:
     # Add any volumes your API might need, e.g., for uploads or logs
     # - ./api_data:/app/data
@@ -27,28 +37,35 @@ services:
       start_period: 30s
 
   iot_db:
-    image: postgres:${POSTGRES_VERSION:-15}
+    image: postgres:15
     container_name: iot_database
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB_FILE: /run/secrets/db_name
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    secrets:
+      - db_user
+      - db_password
+      - db_name
     volumes:
-      - iot_db_data:/var/lib/postgresql/data
+      - iot_postgres_data:/var/lib/postgresql/data
     networks:
       - iot_network
     # Healthcheck for PostgreSQL
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U iot_user -d iot_database"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
 
   iot_dashboard:
-    image: ${DASHBOARD_IMAGE_NAME}:${DASHBOARD_IMAGE_TAG}
+    image: your_dashboard_image:latest
     container_name: iot_dashboard
+    ports:
+      - "3002:3001"
     # Internal port 3001 (target for cloudflared: iot.atlantis-cloud.com/dashboard)
     restart: unless-stopped
     environment:
@@ -69,8 +86,19 @@ services:
 # Volumes - for persistent data
 #--------------------------------------------------------------------------
 volumes:
-  iot_db_data:
+  iot_postgres_data:
+    name: iot_postgres_data
 
+#--------------------------------------------------------------------------
+# Secrets - for sensitive data
+#--------------------------------------------------------------------------
+secrets:
+  db_user:
+    file: /opt/secrets/iot/db_user
+  db_password:
+    file: /opt/secrets/iot/db_password
+  db_name:
+    file: /opt/secrets/iot/db_name
 #--------------------------------------------------------------------------
 # Networks - for service isolation
 #--------------------------------------------------------------------------

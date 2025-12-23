@@ -6,9 +6,8 @@ services:
   # Affine Main Service
   #--------------------------------------------------------------------------
   affine:
-    image: ghcr.io/toeverything/affine-graphql:${AFFINE_REVISION:-stable}
+    image: ghcr.io/toeverything/affine-graphql:stable
     container_name: affine
-    # Internal port 3010 (target for cloudflared: notes.atlantis-cloud.com)
     ports:
       - "3010:3010"
     depends_on:
@@ -20,11 +19,17 @@ services:
         condition: service_completed_successfully
     volumes:
       # custom configurations
-      - ${UPLOAD_LOCATION}:/root/.affine/storage
-      - ${CONFIG_LOCATION}:/root/.affine/config
+      - /opt/notes/storage:/root/.affine/storage
+      - /opt/notes/config:/root/.affine/config
+      - /opt/secrets/notes:/run/secrets:ro
+    command: >
+      sh -c '
+      DB_PASSWORD=$$(cat /run/secrets/db_password)
+      export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"
+      exec node ./dist/index.js
+      '
     environment:
       - REDIS_SERVER_HOST=redis
-      - DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
       - AFFINE_INDEXER_ENABLED=false
     networks:
       - notes_network
@@ -44,16 +49,21 @@ services:
   # Affine Migration Service
   #--------------------------------------------------------------------------
   affine_migration:
-    image: ghcr.io/toeverything/affine-graphql:${AFFINE_REVISION:-stable}
+    image: ghcr.io/toeverything/affine-graphql:stable
     container_name: affine_migration
     volumes:
       # custom configurations
-      - ${UPLOAD_LOCATION}:/root/.affine/storage
-      - ${CONFIG_LOCATION}:/root/.affine/config
-    command: ["sh", "-c", "node ./scripts/self-host-predeploy.js"]
+      - /opt/notes/storage:/root/.affine/storage
+      - /opt/notes/config:/root/.affine/config
+      - /opt/secrets/notes:/run/secrets:ro
+    command: >
+      sh -c '
+      DB_PASSWORD=$$(cat /run/secrets/db_password)
+      export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"
+      exec node ./scripts/self-host-predeploy.js
+      '
     environment:
       - REDIS_SERVER_HOST=redis
-      - DATABASE_URL=postgresql://${DB_USERNAME}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
       - AFFINE_INDEXER_ENABLED=false
     depends_on:
       postgres:
@@ -71,7 +81,7 @@ services:
     image: redis
     container_name: affine_redis
     volumes:
-      - redis_data:/data
+      - notes_redis_data:/data
     networks:
       - notes_network
     healthcheck:
@@ -88,17 +98,19 @@ services:
     image: pgvector/pgvector:pg16
     container_name: affine_postgres
     volumes:
-      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+      - notes_postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER_FILE: /run/secrets/db_username
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: affine
       POSTGRES_INITDB_ARGS: "--data-checksums"
+    secrets:
+      - db_username
+      - db_password
     networks:
       - notes_network
     healthcheck:
-      test:
-        ["CMD", "pg_isready", "-U", "${DB_USERNAME}", "-d", "${DB_DATABASE}"]
+      test: ["CMD", "pg_isready", "-U", "affine_user", "-d", "affine"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -108,7 +120,19 @@ services:
 # Volumes - for persistent data
 #--------------------------------------------------------------------------
 volumes:
-  redis_data:
+  notes_redis_data:
+    name: notes_redis_data
+  notes_postgres_data:
+    name: notes_postgres_data
+
+#--------------------------------------------------------------------------
+# Secrets - for sensitive data
+#--------------------------------------------------------------------------
+secrets:
+  db_username:
+    file: /opt/secrets/notes/db_username
+  db_password:
+    file: /opt/secrets/notes/db_password
 
 #--------------------------------------------------------------------------
 # Networks - for service isolation

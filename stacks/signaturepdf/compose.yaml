@@ -6,7 +6,7 @@ services:
   # SignaturePDF Service
   #--------------------------------------------------------------------------
   signaturepdf:
-    image: xgaia/signaturepdf:${SIGNATUREPDF_IMAGE_TAG:-latest}
+    image: xgaia/signaturepdf:latest
     platform: linux/amd64
     container_name: signaturepdf
     # Expose port 8080 for direct access
@@ -14,7 +14,7 @@ services:
       - "8080:80"
     restart: unless-stopped
     environment:
-      - TZ=${TZ:-Europe/Berlin}
+      - TZ=Europe/Berlin
       - SERVERNAME=pdf.atlantis-cloud.com
 
     command: >

@@ -5,20 +5,25 @@ services:
   # Drive Network Service
   #--------------------------------------------------------------------------
   nextcloud:
-    image: nextcloud:${NEXTCLOUD_IMAGE_TAG:-latest}
+    image: nextcloud:latest
     container_name: nextcloud_drive
     # Internal port 80 (target for cloudflared: drive.atlantis-cloud.com)
     restart: unless-stopped
+    ports:
+      - "8080:80"
     environment:
       - MYSQL_HOST=nextcloud_db
-      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
-      - MYSQL_USER=${NEXTCLOUD_DB_USER}
-      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER_FILE=/run/secrets/db_user
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_user
+      - db_password
     volumes:
-      - nextcloud_html:/var/www/html
-      - nextcloud_data:/var/www/html/data
-      - nextcloud_config:/var/www/html/config
-      - nextcloud_apps:/var/www/html/custom_apps
+      - /opt/drive/html:/var/www/html
+      - /opt/drive/data:/var/www/html/data
+      - /opt/drive/config:/var/www/html/config
+      - /opt/drive/apps:/var/www/html/custom_apps
     networks:
       - drive_network
     depends_on:
@@ -32,17 +37,21 @@ services:
       start_period: 60s
 
   nextcloud_db:
-    image: mariadb:${MARIADB_VERSION:-10.11}
+    image: mariadb:10.11
     container_name: nextcloud_mariadb
     restart: unless-stopped
     command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed
     environment:
-      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
-      - MYSQL_USER=${NEXTCLOUD_DB_USER}
-      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER_FILE=/run/secrets/db_user
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_root_password
+      - db_user
+      - db_password
     volumes:
-      - nextcloud_db_data:/var/lib/mysql
+      - drive_mariadb_data:/var/lib/mysql
     networks:
       - drive_network
     # Healthcheck for MariaDB
@@ -50,13 +59,9 @@ services:
       test:
         [
           "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${NEXTCLOUD_DB_ROOT_PASSWORD}",
+          "sh",
+          "-c",
+          "mysqladmin ping -h localhost -u root -p$$(cat /run/secrets/db_root_password)",
         ]
       interval: 30s
       timeout: 10s
@@ -67,11 +72,19 @@ services:
 # Volumes - for persistent data
 #--------------------------------------------------------------------------
 volumes:
-  nextcloud_html:
-  nextcloud_data:
-  nextcloud_config:
-  nextcloud_apps:
-  nextcloud_db_data:
+  drive_mariadb_data:
+    name: drive_mariadb_data
+
+#--------------------------------------------------------------------------
+# Secrets - for sensitive data
+#--------------------------------------------------------------------------
+secrets:
+  db_root_password:
+    file: /opt/secrets/drive/db_root_password
+  db_user:
+    file: /opt/secrets/drive/db_user
+  db_password:
+    file: /opt/secrets/drive/db_password
 
 #--------------------------------------------------------------------------
 # Networks - for service isolation

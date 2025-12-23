@@ -7,11 +7,14 @@ services:
       - PGID=100
       - UMASK=0022
       - TZ=Europe/Berlin
-      - COUCHDB_USER=${COUCHDB_USER}
-      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
+      - COUCHDB_USER_FILE=/run/secrets/couchdb_user
+      - COUCHDB_PASSWORD_FILE=/run/secrets/couchdb_password
+    secrets:
+      - couchdb_user
+      - couchdb_password
     volumes:
-      - ${COUCHDB_DATA_PATH}:/opt/couchdb/data
-      - ${COUCHDB_CONFIG_PATH}:/opt/couchdb/etc/local.d
+      - obsidian_data:/opt/couchdb/data
+      - /opt/obsidian/config:/opt/couchdb/etc/local.d
     # Remove port exposure since we'll access via cloudflared
     # ports:
     #   - "5984:5984"
@@ -25,6 +28,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+# Volumes for database data
+volumes:
+  obsidian_data:
+    name: obsidian_data
+
+# Secrets for CouchDB
+secrets:
+  couchdb_user:
+    file: /opt/secrets/obsidian/couchdb_user
+  couchdb_password:
+    file: /opt/secrets/obsidian/couchdb_password
 
 # Dedicated network for Obsidian services
 networks:

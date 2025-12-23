@@ -120,11 +120,10 @@ DB_PASSWORD=$(cat /run/secrets/db_password)
 
 ## Using Environment Variables with Secrets
 
-**Note:** The current configuration uses environment variable substitution (`${VAR_NAME}`) for paths and most settings. For sensitive credentials, we recommend:
+**Note:** This repository is intended to work without a `.env` file. For sensitive credentials, we recommend:
 
-1. Keep the `.env` file minimal (only for non-sensitive values)
-2. Use Docker Compose secrets for all passwords and tokens
-3. Modify applications to read from `/run/secrets/` or use initialization scripts
+1. Use Docker Compose secrets for all passwords and tokens
+2. Modify applications to read from `/run/secrets/` or use initialization scripts
 
 ## Adding New Secrets
 
@@ -161,12 +160,12 @@ To add a new secret:
 
 ## Migration from .env Files
 
-If you're migrating from `.env` files:
+If you're migrating from a setup that used `.env` files:
 
 1. Extract sensitive values from `.env`
 2. Create corresponding secret files in `secrets/`
 3. Update compose files to use `secrets:` section
-4. Remove sensitive values from `.env` (keep only non-sensitive paths and tags)
+4. Remove `.env` usage from your deployment flow (this repo does not rely on it)
 5. Test thoroughly before deploying
 
 ## References

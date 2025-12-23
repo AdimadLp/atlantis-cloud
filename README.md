@@ -29,6 +29,16 @@ Self-hosted cloud setup using Docker Compose.
    ```bash
    git clone https://github.com/AdimadLp/atlantis-cloud.git
    cd atlantis-cloud
-   cp .env.example .env
-   # Edit .env with your settings
    ```
+
+2. **Create secrets (required)**
+
+This repo uses Docker Compose `secrets:` for credentials (see `SECRETS.md`).
+
+3. **Start a stack**
+
+Each service group has its own compose file under `stacks/`:
+
+```bash
+docker compose -f stacks/<stack>/compose.yaml up -d
+```

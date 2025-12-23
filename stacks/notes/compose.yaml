@@ -5,7 +5,7 @@ services:
   # Affine Main Service
   #--------------------------------------------------------------------------
   affine:
-    image: ghcr.io/toeverything/affine:${AFFINE_REVISION:-stable}
+    image: ghcr.io/toeverything/affine:stable
     pull_policy: always
     container_name: affine
     ports:

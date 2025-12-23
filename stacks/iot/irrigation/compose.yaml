@@ -11,8 +11,10 @@ services:
       - "8000:8000"
     # Internal port 8000 (target for cloudflared: iot.atlantis-cloud.com/api)
     restart: unless-stopped
-    volumes:
-      - /opt/secrets/iot:/run/secrets:ro
+    secrets:
+      - db_user
+      - db_password
+      - db_name
     command: >
       sh -c '
       DB_USER=$$(cat /run/secrets/db_user)

@@ -21,7 +21,8 @@ services:
       # custom configurations
       - /opt/notes/storage:/root/.affine/storage
       - /opt/notes/config:/root/.affine/config
-      - /opt/secrets/notes:/run/secrets:ro
+    secrets:
+      - db_password
     command: >
       sh -c '
       DB_PASSWORD=$$(cat /run/secrets/db_password)
@@ -55,7 +56,8 @@ services:
       # custom configurations
       - /opt/notes/storage:/root/.affine/storage
       - /opt/notes/config:/root/.affine/config
-      - /opt/secrets/notes:/run/secrets:ro
+    secrets:
+      - db_password
     command: >
       sh -c '
       DB_PASSWORD=$$(cat /run/secrets/db_password)

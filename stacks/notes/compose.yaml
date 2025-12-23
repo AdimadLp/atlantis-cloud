@@ -22,7 +22,7 @@ services:
       - /opt/notes/config:/root/.affine/config
     secrets:
       - db_password
-    command: >
+    command: |
       sh -c '
       DB_PASSWORD=$$(cat /run/secrets/db_password)
       export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"
@@ -57,7 +57,7 @@ services:
       - /opt/notes/config:/root/.affine/config
     secrets:
       - db_password
-    command: >
+    command: |
       sh -c '
       DB_PASSWORD=$$(cat /run/secrets/db_password)
       export DATABASE_URL="postgresql://affine_user:$$DB_PASSWORD@postgres:5432/affine"

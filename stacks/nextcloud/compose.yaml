@@ -1,13 +1,8 @@
-# Drive Services - Nextcloud
-# Separate docker-compose file for cloud storage services
 services:
-  #--------------------------------------------------------------------------
-  # Drive Network Service
-  #--------------------------------------------------------------------------
   nextcloud:
     image: nextcloud:latest
     pull_policy: always
-    container_name: nextcloud_drive
+    container_name: nextcloud
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -18,7 +13,6 @@ services:
       - MYSQL_PASSWORD_FILE=/run/secrets/db_password
       - NEXTCLOUD_ADMIN_USER_FILE=/run/secrets/nextcloud_admin_user
       - NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/nextcloud_admin_password
-      # Reverse proxy (Caddy on edge) + public domain
       - "NEXTCLOUD_TRUSTED_DOMAINS=drive.atlantis-cloud.com 192.168.2.140"
       - TRUSTED_PROXIES=192.168.2.120
       # - OVERWRITEHOST=drive.atlantis-cloud.com
@@ -30,10 +24,10 @@ services:
       - nextcloud_admin_user
       - nextcloud_admin_password
     volumes:
-      - /opt/drive/html:/var/www/html
-      - /opt/drive/data:/var/www/html/data
-      - /opt/drive/config:/var/www/html/config
-      - /opt/drive/apps:/var/www/html/custom_apps
+      - /opt/nextcloud/html:/var/www/html
+      - /opt/nextcloud/data:/var/www/html/data
+      - /opt/nextcloud/config:/var/www/html/config
+      - /opt/nextcloud/apps:/var/www/html/custom_apps
     depends_on:
       nextcloud_db:
         condition: service_healthy
@@ -61,7 +55,7 @@ services:
       - db_user
       - db_password
     volumes:
-      - drive_mariadb_data:/var/lib/mysql
+      - nextcloud_mariadb_data:/var/lib/mysql
     # Healthcheck for MariaDB
     healthcheck:
       test:
@@ -80,20 +74,20 @@ services:
 # Volumes - for persistent data
 #--------------------------------------------------------------------------
 volumes:
-  drive_mariadb_data:
-    name: drive_mariadb_data
+  nextcloud_mariadb_data:
+    name: nextcloud_mariadb_data
 
 #--------------------------------------------------------------------------
 # Secrets - for sensitive data
 #--------------------------------------------------------------------------
 secrets:
   db_root_password:
-    file: /opt/secrets/drive/db_root_password
+    file: /opt/secrets/nextcloud/db_root_password
   db_user:
-    file: /opt/secrets/drive/db_user
+    file: /opt/secrets/nextcloud/db_user
   db_password:
-    file: /opt/secrets/drive/db_password
+    file: /opt/secrets/nextcloud/db_password
   nextcloud_admin_user:
-    file: /opt/secrets/drive/nextcloud_admin_user
+    file: /opt/secrets/nextcloud/nextcloud_admin_user
   nextcloud_admin_password:
-    file: /opt/secrets/drive/nextcloud_admin_password
+    file: /opt/secrets/nextcloud/nextcloud_admin_password

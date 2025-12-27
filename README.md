@@ -5,7 +5,7 @@ Self-hosted cloud setup using Docker Compose.
 ## Services
 
 - **IoT Dashboard** - Monitor and control IoT devices
-- **Notes (Affine)** - Personal note-taking
+- **Affine** - Personal note-taking
 - **Obsidian LiveSync** - Sync Obsidian vault
 - **Nextcloud** - File storage and sharing
 - **PDF Signatures** - Sign documents
@@ -16,9 +16,9 @@ Self-hosted cloud setup using Docker Compose.
 - **Isolated Networks**: Each service group runs in its own Docker network for security
 - **Service Networks**:
   - `iot_network`: IoT API + PostgreSQL
-  - `notes_network`: Affine notes application
+  - `affine_network`: Affine notes application
   - `obsidian_network`: CouchDB for Obsidian LiveSync
-  - `drive_network`: Nextcloud + MariaDB
+  - `nextcloud_network`: Nextcloud + MariaDB
   - `immich_network`: Photo management + PostgreSQL + Redis
   - `pdf_network`: SignaturePDF service
 

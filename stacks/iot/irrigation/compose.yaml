@@ -1,9 +1,4 @@
-# IoT Services - Irrigation System
-# Separate docker-compose file for IoT-related services
 services:
-  #--------------------------------------------------------------------------
-  # IOT Network Services
-  #--------------------------------------------------------------------------
   iot_api:
     image: your_iot_api_image:latest
     pull_policy: always

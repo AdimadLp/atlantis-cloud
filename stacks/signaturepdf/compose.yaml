@@ -1,10 +1,4 @@
-# filepath: /home/adrian/Dokumente/atlantis-cloud/signaturepdf/docker-compose.yaml
-# SignaturePDF Services - PDF Signature Tool
-# Separate docker-compose file for PDF signature services
 services:
-  #--------------------------------------------------------------------------
-  # SignaturePDF Service
-  #--------------------------------------------------------------------------
   signaturepdf:
     image: xgaia/signaturepdf:latest
     pull_policy: always

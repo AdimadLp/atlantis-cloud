@@ -1,9 +1,4 @@
-# Notes Services - Affine
-# Separate docker-compose file for note-taking services
 services:
-  #--------------------------------------------------------------------------
-  # Affine Main Service
-  #--------------------------------------------------------------------------
   affine:
     image: ghcr.io/toeverything/affine:stable
     pull_policy: always
@@ -17,8 +12,8 @@ services:
         condition: service_healthy
     volumes:
       # custom configurations
-      - /opt/notes/storage:/root/.affine/storage
-      - /opt/notes/config:/root/.affine/config
+      - /opt/affine/storage:/root/.affine/storage
+      - /opt/affine/config:/root/.affine/config
     secrets:
       - db_password
     command: |
@@ -51,7 +46,7 @@ services:
     pull_policy: always
     container_name: affine_redis
     volumes:
-      - notes_redis_data:/data
+      - affine_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -67,7 +62,7 @@ services:
     pull_policy: always
     container_name: affine_postgres
     volumes:
-      - notes_postgres_data:/var/lib/postgresql/data
+      - affine_postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: affine_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
@@ -86,14 +81,14 @@ services:
 # Volumes - for persistent data
 #--------------------------------------------------------------------------
 volumes:
-  notes_redis_data:
-    name: notes_redis_data
-  notes_postgres_data:
-    name: notes_postgres_data
+  affine_redis_data:
+    name: affine_redis_data
+  affine_postgres_data:
+    name: affine_postgres_data
 
 #--------------------------------------------------------------------------
 # Secrets - for sensitive data
 #--------------------------------------------------------------------------
 secrets:
   db_password:
-    file: /opt/secrets/notes/db_password
+    file: /opt/secrets/affine/db_password

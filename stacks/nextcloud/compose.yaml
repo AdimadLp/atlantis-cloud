@@ -24,10 +24,10 @@ services:
       - nextcloud_admin_user
       - nextcloud_admin_password
     volumes:
-      - /opt/nextcloud/html:/var/www/html
-      - /opt/nextcloud/data:/var/www/html/data
-      - /opt/nextcloud/config:/var/www/html/config
-      - /opt/nextcloud/apps:/var/www/html/custom_apps
+      - /srv/containers/nextcloud/html:/var/www/html
+      - /srv/containers/nextcloud/data:/var/www/html/data
+      - /srv/containers/nextcloud/config:/var/www/html/config
+      - /srv/containers/nextcloud/apps:/var/www/html/custom_apps
     depends_on:
       nextcloud_db:
         condition: service_healthy
@@ -82,12 +82,12 @@ volumes:
 #--------------------------------------------------------------------------
 secrets:
   db_root_password:
-    file: /opt/secrets/nextcloud/db_root_password
+    file: /srv/secrets/nextcloud/db_root_password
   db_user:
-    file: /opt/secrets/nextcloud/db_user
+    file: /srv/secrets/nextcloud/db_user
   db_password:
-    file: /opt/secrets/nextcloud/db_password
+    file: /srv/secrets/nextcloud/db_password
   nextcloud_admin_user:
-    file: /opt/secrets/nextcloud/nextcloud_admin_user
+    file: /srv/secrets/nextcloud/nextcloud_admin_user
   nextcloud_admin_password:
-    file: /opt/secrets/nextcloud/nextcloud_admin_password
+    file: /srv/secrets/nextcloud/nextcloud_admin_password

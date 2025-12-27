@@ -88,8 +88,8 @@ volumes:
 #--------------------------------------------------------------------------
 secrets:
   db_user:
-    file: /opt/secrets/iot/db_user
+    file: /srv/secrets/iot/db_user
   db_password:
-    file: /opt/secrets/iot/db_password
+    file: /srv/secrets/iot/db_password
   db_name:
-    file: /opt/secrets/iot/db_name
+    file: /srv/secrets/iot/db_name

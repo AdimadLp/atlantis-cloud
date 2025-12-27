@@ -11,9 +11,8 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      # custom configurations
-      - /opt/affine/storage:/root/.affine/storage
-      - /opt/affine/config:/root/.affine/config
+      - /srv/containers/affine/storage:/root/.affine/storage
+      - /srv/containers/affine/config:/root/.affine/config
     secrets:
       - db_password
     command: |
@@ -91,4 +90,4 @@ volumes:
 #--------------------------------------------------------------------------
 secrets:
   db_password:
-    file: /opt/secrets/affine/db_password
+    file: /srv/secrets/affine/db_password

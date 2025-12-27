@@ -5,7 +5,7 @@ services:
     ports:
       - "2283:2283"
     volumes:
-      - /srv/containers/immich/photos:/data
+      - /srv/data/containers/immich/photos:/data
       - /etc/localtime:/etc/localtime:ro
     environment:
       DB_HOSTNAME: database
@@ -38,7 +38,7 @@ services:
     image: ghcr.io/immich-app/immich-machine-learning:release
     pull_policy: always
     volumes:
-      - /srv/containers/immich/model-cache:/cache
+      - /srv/data/containers/immich/model-cache:/cache
     environment:
       IMMICH_LOG_LEVEL: log
       TZ: Europe/Berlin
@@ -57,7 +57,7 @@ services:
   redis:
     image: docker.io/valkey/valkey:9@sha256:fb8d272e529ea567b9bf1302245796f21a2672b8368ca3fcb938ac334e613c8f
     volumes:
-      - immich_redis_data:/data
+      - /srv/data/containers/immich/redis/data:/data
     healthcheck:
       test: redis-cli ping || exit 1
     restart: always
@@ -74,18 +74,9 @@ services:
     secrets:
       - db_password
     volumes:
-      - immich_postgres_data:/var/lib/postgresql/data
+      - /srv/data/containers/immich/postgres/data:/var/lib/postgresql/data
     shm_size: 128mb
     restart: always
-
-#--------------------------------------------------------------------------
-# Volumes - for persistent data
-#--------------------------------------------------------------------------
-volumes:
-  immich_postgres_data:
-    name: immich_postgres_data
-  immich_redis_data:
-    name: immich_redis_data
 
 #--------------------------------------------------------------------------
 # Secrets - for sensitive data

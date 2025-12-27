@@ -16,9 +16,6 @@ services:
       sh -c "echo 'ServerName pdf.atlantis-cloud.com' >> /etc/apache2/apache2.conf &&
              a2dissite 000-default &&
              exec apache2-foreground"
-    # volumes:
-    # Volume for PDF storage
-    # - data:/data
     # Healthcheck for SignaturePDF
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
@@ -26,9 +23,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-#--------------------------------------------------------------------------
-# Volumes - for persistent data
-#--------------------------------------------------------------------------
-#volumes:
-#  signaturepdf_data:
-

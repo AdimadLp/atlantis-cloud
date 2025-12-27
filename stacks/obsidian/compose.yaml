@@ -14,8 +14,8 @@ services:
       - couchdb_user
       - couchdb_password
     volumes:
-      - obsidian_data:/opt/couchdb/data
-      - /srv/containers/obsidian/config:/opt/couchdb/etc/local.d
+      - /srv/data/containers/obsidian/couchdb/data:/opt/couchdb/data
+      - /srv/data/containers/obsidian/couchdb/config:/opt/couchdb/etc/local.d
     # Remove port exposure since we'll access via cloudflared
     # ports:
     #   - "5984:5984"
@@ -27,11 +27,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-
-# Volumes for database data
-volumes:
-  obsidian_data:
-    name: obsidian_data
 
 # Secrets for CouchDB
 secrets:

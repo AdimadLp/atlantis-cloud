@@ -24,10 +24,10 @@ services:
       - nextcloud_admin_user
       - nextcloud_admin_password
     volumes:
-      - /srv/containers/nextcloud/html:/var/www/html
-      - /srv/containers/nextcloud/data:/var/www/html/data
-      - /srv/containers/nextcloud/config:/var/www/html/config
-      - /srv/containers/nextcloud/apps:/var/www/html/custom_apps
+      - /srv/data/containers/nextcloud/html:/var/www/html
+      - /srv/data/containers/nextcloud/data:/var/www/html/data
+      - /srv/data/containers/nextcloud/config:/var/www/html/config
+      - /srv/data/containers/nextcloud/apps:/var/www/html/custom_apps
     depends_on:
       nextcloud_db:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
       - db_user
       - db_password
     volumes:
-      - nextcloud_mariadb_data:/var/lib/mysql
+      - /srv/data/containers/nextcloud/mariadb:/var/lib/mysql
     # Healthcheck for MariaDB
     healthcheck:
       test:
@@ -69,13 +69,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-
-#--------------------------------------------------------------------------
-# Volumes - for persistent data
-#--------------------------------------------------------------------------
-volumes:
-  nextcloud_mariadb_data:
-    name: nextcloud_mariadb_data
 
 #--------------------------------------------------------------------------
 # Secrets - for sensitive data

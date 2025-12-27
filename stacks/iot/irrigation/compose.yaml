@@ -19,9 +19,6 @@ services:
       export DATABASE_URL="postgresql://$$DB_USER:$$DB_PASSWORD@iot_db:5432/$$DB_NAME"
       exec node /app/index.js
       '
-    # volumes:
-    # Add any volumes your API might need, e.g., for uploads or logs
-    # - ./api_data:/app/data
     depends_on:
       - iot_db
     # Healthcheck for API
@@ -47,7 +44,7 @@ services:
       - db_password
       - db_name
     volumes:
-      - iot_postgres_data:/var/lib/postgresql/data
+      - /srv/data/containers/iot/irrigation/postgres/data:/var/lib/postgresql/data
     # Healthcheck for PostgreSQL
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U iot_user -d iot_database"]
@@ -75,13 +72,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-
-#--------------------------------------------------------------------------
-# Volumes - for persistent data
-#--------------------------------------------------------------------------
-volumes:
-  iot_postgres_data:
-    name: iot_postgres_data
 
 #--------------------------------------------------------------------------
 # Secrets - for sensitive data
